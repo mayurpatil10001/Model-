@@ -1,0 +1,10 @@
+pymc>=5.10
+pytensor>=2.18
+pandas>=2.0
+numpy>=1.26
+scipy>=1.11
+pyarrow>=14.0
+pytz
+statsmodels>=0.14
+matplotlib>=3.8
+arviz>=0.17

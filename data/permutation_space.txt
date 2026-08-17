@@ -1,0 +1,4 @@
+Full permutation space:  930
+In-model permutations:   920
+Excluded (too sparse):   10
+MIN_SLOT_TRADES floor:   20
