@@ -16,7 +16,7 @@ print(f"  {N_FOLDS} fold posteriors, {len(all_folds):,} slot-fold rows.")
 all_folds["passes"]=all_folds["sortino_lo90"].fillna(-99)>LB_GATE
 print(f"\n  Primary gate (sortino_lo90 > {LB_GATE}) per fold:")
 for i in range(N_FOLDS):
-    fd=all_folds[all_folds["fold"]==i]
+    fd=all_folds[all_folds["fold_i"]==i]
     print(f"    Fold {i+1}: {int(fd['passes'].sum())} / {len(fd)} slots pass")
 
 surv=all_folds.groupby("slot_id")["passes"].sum().reset_index()
