@@ -1,3 +1,5 @@
+import os as _os
+_os.environ.setdefault("PYTENSOR_FLAGS", "cxx=")
 
 """
 06_holdout_eval.py  Step 7
@@ -75,7 +77,8 @@ with pm.Model() as model:
     mu=a_+zs[si]*ts*ls[si]+zd[di]*td*ld[di]+zb[bi]*tb*lb[bi]+zsb[sbi]*tsb*lsb[sbi]
     _=pm.Normal("obs",mu=mu,sigma=ys,observed=yo)
     trace_f=pm.sample(draws=DRAWS,tune=TUNE,chains=CHAINS,target_accept=TARGET_ACCEPT,
-                      return_inferencedata=True,progressbar=True)
+                      nuts_sampler='numpyro',
+                        return_inferencedata=True,progressbar=True)
 
 trace_f.to_netcdf(f"{RESULTS_DIR}/final_model_trace.nc")
 post=trace_f.posterior

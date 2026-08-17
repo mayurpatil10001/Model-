@@ -1,3 +1,5 @@
+import os as _os
+_os.environ.setdefault("PYTENSOR_FLAGS", "cxx=")
 
 """
 04_permutation_null.py  Step 5
@@ -59,7 +61,8 @@ def fit_null_fold(shuf_df, sidx_df, fold_i, rng):
         mu=a_+zs[si]*ts*ls[si]+zd[di]*td*ld[di]+zb[bi]*tb*lb[bi]+zsb[sbi]*tsb*lsb[sbi]
         _=pm.Normal("obs",mu=mu,sigma=ys,observed=yo)
         tr=pm.sample(draws=DRAWS,tune=TUNE,chains=CHAINS,target_accept=0.9,
-                     return_inferencedata=True,progressbar=False,compute_convergence_checks=False)
+                     nuts_sampler='numpyro',
+                        return_inferencedata=True,progressbar=False,compute_convergence_checks=False)
     post=tr.posterior
     ap=post["alpha"].values.ravel()
     zs_p=post["z_sym"].values.reshape(-1,len(syms)); ts_p=post["tau_sym"].values.ravel(); ls_p=post["lam_sym"].values.reshape(-1,len(syms))

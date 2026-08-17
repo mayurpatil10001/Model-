@@ -1,3 +1,5 @@
+import os as _os
+_os.environ.setdefault("PYTENSOR_FLAGS", "cxx=")
 
 """
 02_fit_model.py  Step 3
@@ -61,6 +63,7 @@ def build_and_sample(agg, sidx_df):
         mu=a_+zs[si]*ts*ls[si]+zd[di]*td*ld[di]+zb[bi]*tb*lb[bi]+zsb[sbi]*tsb*lsb[sbi]
         _=pm.Normal("obs",mu=mu,sigma=ys,observed=yo)
         trace=pm.sample(draws=DRAWS,tune=TUNE,chains=CHAINS,target_accept=TARGET_ACCEPT,
+                        nuts_sampler='numpyro',
                         return_inferencedata=True,progressbar=True)
     return trace,m,si,di,bi,sbi,syms,days,bkts,sbp
 
