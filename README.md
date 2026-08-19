@@ -361,11 +361,29 @@ Changes from v2 centered model:
 Pre-committed pass bar: R-hat < 1.05 AND ESS > 400 in >= 4/5 folds.
 Script: step1_ncp_model.py -> results/ncp/
 
-STATUS: RUNNING (launched 2026-08-19). Will update when complete.
+STATUS: COMPLETE -- FAIL
 
-If bar met: NCP posterior Sortino becomes primary gate.
-If bar not met: Sampler intractable in this environment. BH-FDR remains final primary
-method. No third attempt permitted.
+Per-fold results (all 5 folds FAILED the pre-committed bar):
+  All folds: R-hat max in range 1.00-1.02 (pass), ESS min = 85-314 (FAIL, gate >400)
+  Fold 5 also had 32 divergences after tuning.
+
+  Representative diagnostics (Fold 5 -- best performing):
+    R-hat max = 1.0178  -> PASS
+    ESS min   = 314     -> FAIL
+    sigma_bkt: ESS=314, R-hat=1.018 (bottleneck parameter)
+    alpha:     ESS=1658, R-hat=1.001
+
+VERDICT: FAIL -- 0/5 folds met the pre-committed bar (R-hat<1.05 AND ESS>400).
+
+Interpretation: The NCP reparameterization improved R-hat substantially (from
+31,633,592 to ~1.01) but ESS remained below 400 in all folds. The sigma_bkt
+(time-bucket scale) parameter is the persistent bottleneck. With 48 buckets and
+only 4 symbols x 6 days = 24 day-symbol cells, the bucket-level variance is
+poorly identified -- this is an intrinsic model identifiability issue in this
+environment, not solvable by further parameterization tricks.
+
+Action (pre-committed): BH-FDR remains the sole final primary method.
+No third sampler attempt. This is the final model state.
 
 ### Step 2 -- Permutation Null Test (COMPLETE)
 
@@ -567,8 +585,9 @@ python 04_permutation_null.py     # 20 shuffles, ~3 minutes
 
 ---
 
-*README version: 4.0*
+*README version: 4.1*
 *Last updated: 2026-08-19*
-*Model status: AUDIT IN PROGRESS -- Step 1 NCP model running*
-*One validated finding: CL Sunday Bkt36 (p=0.047 Bonferroni-corrected, single holdout)*
+*Model status: AUDIT COMPLETE -- all 4 steps finished*
+*Sampler: intractable in this environment (ESS<400 in all 5 folds). BH-FDR is final primary method.*
+*One validated finding: CL Sunday Bkt36 (Bonferroni p=0.047, single holdout, needs fresh confirmation)*
 *Waiting for: Aug 2026 data for independent confirmation of CL Sunday*

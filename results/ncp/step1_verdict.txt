@@ -1,0 +1,5 @@
+NCP Model Verdict
+Folds passing: 0/5
+Bar: >= 4/5
+Result: FAIL
+Per-fold: [False, False, False, False, False]
