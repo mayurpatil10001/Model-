@@ -1,0 +1,61 @@
+VWAP DIRECTIONAL FILTER — TEST VERDICT
+============================================================
+Locked rule: 6-hour rolling VWAP (Yahoo Finance 1h OHLCV)
+  LONG: include if entry_price > 6h_VWAP
+  SHORT: include if entry_price < 6h_VWAP
+  Window: 6 bars (6 hours). No tunable parameters.
+FDAX slots excluded (587,648,675,677): no Yahoo Finance intraday data.
+
+MOTIVATING CASES:
+  ES Wednesday 16:00 — Cycle 23 fwd (May 2026):
+    ALL: n=231  mean=-36.31/trade
+    VWAP-confirmed: n=44  mean=-52.56/trade  [WORSE: -45% fewer trades, -45% worse PnL]
+  ES Wednesday 16:00 — Cycle 24 fwd (Jun 2026):
+    ALL: n=72  mean=-276.56/trade
+    VWAP-confirmed: n=45  mean=-413.61/trade  [WORSE: -38% trades, -50% worse PnL]
+  CL Tuesday 18:30 — Cycle 24 fwd (Jun 2026):
+    ALL: n=2  mean=+150.00/trade
+    VWAP-confirmed: n=2  mean=+150.00/trade  [SAME]
+  CL Tuesday 18:30 — Cycle 25 fwd (Jul 2026):
+    ALL: n=3  mean=-263.33/trade
+    VWAP-confirmed: n=1  mean=-330.00/trade  [WORSE]
+
+ALL 17 NON-FDAX SLOTS:
+  Avg t-stat ALL:       -3.252
+  Avg t-stat VWAP:      -2.223  (change: +1.030)  [ARTIFACT - see note below]
+  Avg mean PnL ALL:     -30.89/trade
+  Avg mean PnL VWAP:    -38.32/trade  [WORSE - the true performance metric]
+  Significant ALL:      0 / 17
+  Significant VWAP:     0 / 17
+  Slots improved (mean PnL): 7 / 17
+
+STATISTICAL ARTIFACT NOTE:
+  The average t-stat change of +1.030 is NOT evidence of improvement.
+  Removing ~47% of trades roughly halves the denominator of t = mean / (std / sqrt(n)).
+  With fewer trades, standard error grows proportionally to 1/sqrt(n), which mechanically
+  pushes t-statistics toward zero (less negative). The mean PnL per trade got WORSE
+  (-30.89 -> -38.32/trade), confirming the filter is selecting the losing trades more
+  precisely. The apparent t-stat improvement is an artifact of subsampling, not evidence
+  of a real signal.
+
+CONCLUSION:
+  VWAP directional filter does NOT resolve the reversal pattern.
+  - Mean PnL per trade worsened: -30.89 -> -38.32/trade
+  - The two motivating cases (ES Wed 16:00) got substantially worse under filtering
+  - 0/17 slots crossed significance threshold
+  - 7/17 slots showed improved mean PnL but none turned profitable
+  - Hypothesis tested and rejected.
+
+  This is the third and final conditioning filter tested and rejected.
+
+PHASE 2 FILTER RESEARCH — SUMMARY:
+  1. Macro Blackout Filter (+-30 min around FOMC/CPI/NFP): FALSIFIED
+     - Zero trades removed from motivating slots (timing incompatible)
+  2. Volatility Regime Filter (VIX < 20 prior day): FALSIFIED
+     - Reversal occurs entirely in low-VIX periods
+  3. VWAP Directional Filter (6h rolling VWAP): FALSIFIED
+     - Mean PnL worsened; t-stat change is subsampling artifact
+  
+  All three proposed conditioning layers have been tested with pre-specified rules
+  and honest reporting. None resolved the reversal pattern.
+  See final_closeout_report.md for full research program conclusion.
