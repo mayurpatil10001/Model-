@@ -1,0 +1,27 @@
+MACRO BLACKOUT FILTER — TEST VERDICT
+============================================================
+Blackout rule: ±30 min around 270 USD high-impact events, Jan 2024–Jul 2026
+Timezone: America/New_York (ET), matching data bucket_labels
+Source: Federal Reserve, BLS, BEA, ISM (see build_macro_calendar.py)
+
+MOTIVATING CASES:
+  ES Wednesday 16:00 (4:00 PM ET):
+    Trades removed by filter: 0 of 4162 (0.0%)
+    Why: All macro blackout windows end by 15:00 ET (FOMC press conf ±30 min).
+    The 16:00 bucket is 60+ minutes AFTER the latest possible blackout.
+    Filter verdict for this case: NO EFFECT.
+
+  CL Tuesday 18:30 (6:30 PM ET):
+    Trades removed by filter: 0 of 531 (0.0%)
+    Why: All macro blackout windows are at 08:00-09:00 ET or 09:30-10:30 ET.
+    The 18:30 bucket is 8+ hours after the latest possible blackout.
+    Filter verdict for this case: NO EFFECT.
+
+ALL 21 SLOTS:
+  Avg trades removed:    4.70% per slot
+  t-stat change (avg):   -0.0595
+  Originally significant: 1 / 21
+  Post-filter significant: 1 / 21
+
+CONCLUSION:
+  Filter shows meaningful trade removal — see full permutation-null results.
