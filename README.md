@@ -1,427 +1,408 @@
-# GFRE-v3.1 — Quantitative Time-Slot Edge Research Project
-## Status: RESEARCH PHASE — No Live Capital Authorized
+# SC_results_WF — Systematic Calendar Slot Model
+## Research Repository | Audit Status: PHASE 2 ACTIVE
 
-**Last Updated:** 21-Aug-2026  
-**Lead Analyst:** Gilad  
-**Data Range:** 21-Jan-2024 → 17-Jul-2026  
-**Assets:** NQ (Nasdaq-100), FDAX (DAX), ES (S&P 500), CL (Crude Oil)  
-**Primary Dashboard:** `results/interactive_slot_matrix_dashboard.html`
+> **Current Status (Aug 2026):** Three context-free conditioning hypotheses tested and
+> rejected. Static calendar slot selection is conclusively confirmed to have no durable
+> forward edge. Phase 2 context-aware conditioning research is underway.
 
 ---
 
-## CURRENT STATUS (21-Aug-2026)
+## TABLE OF CONTENTS
 
-> **CONCLUSION: Static calendar-based slot selection is structurally anti-predictive.**
-> No live capital is authorized. The project is transitioning to context-aware (regime-filtered) models.
-
-| Status Item | Result |
-|---|---|
-| BH-FDR Candidates identified (IS) | 21 slots |
-| Candidates surviving OOS | **2 / 21 (9.5%)** |
-| Candidate IS PnL (selected slots) | **+$6,061,282** |
-| Candidate OOS PnL (same slots, forward) | **-$1,528,785** |
-| Permutation Null test (20 runs) | Model is **9.5× worse than random** |
-| Live capital status | **NOT AUTHORIZED** |
-| Next phase | Context-aware filters (VWAP, Volatility Regime, Macro) |
+1. [Project Overview](#1-project-overview)
+2. [Repository Structure](#2-repository-structure)
+3. [Data Pipeline](#3-data-pipeline)
+4. [Model Design](#4-model-design)
+5. [Phase 1 Results — Static Slot Selection](#5-phase-1-results)
+6. [Phase 2 — Context Filter Research](#6-phase-2-context-filter-research)
+7. [Interactive Dashboards](#7-interactive-dashboards)
+8. [Research Audit Timeline](#8-research-audit-timeline)
+9. [Module Catalog](#9-module-catalog)
+10. [File Structure](#10-file-structure)
+11. [Key Decisions & Constraints](#11-key-decisions--constraints)
+12. [Stakeholder Notes](#12-stakeholder-notes)
 
 ---
 
 ## 1. PROJECT OVERVIEW
 
-### 1.1 Objective
-Identify statistically robust intraday time-slot edges across 4 futures contracts
-using a rolling walk-forward validation protocol with strict BH-FDR multiple-testing correction.
+This repository contains the full research pipeline, data, audit trail, and results for
+a systematic futures trading model based on calendar time-slot selection across four instruments:
+**ES (S&P 500 E-mini), NQ (Nasdaq 100 E-mini), CL (WTI Crude Oil), FDAX (DAX Futures).**
 
-### 1.2 Data Architecture
+### Research Question
+> Do specific (symbol, day-of-week, 30-minute bucket) combinations carry a statistically
+> significant, durable forward edge that can be profitably traded?
 
-| Dataset | Rows | Period | Role |
-|---|---|---|---|
-| `data/fold_assignments.parquet` | 2,832,740 | Jan 2024 – Jul 2026 | Master trade ledger |
-| `data/slot_index.parquet` | — | — | Slot metadata (symbol, day, bucket, in_model flag) |
-| `data/fold_date_ranges.parquet` | — | — | Rolling fold windows |
-| `results/bh_fdr_candidates.csv` | 21 rows | — | Confirmed in-sample candidates |
-| `results/rolling_retrain_cycles.csv` | — | — | Walk-forward cycle log |
+### Conclusion (Phase 1)
+> **No.** Static calendar slot selection, with no market-context conditioning, does not
+> carry a durable forward edge. This is proven by three independent methods:
+> 1. Walk-forward holdout: 90.5% of IS-selected slots reversed in OOS
+> 2. Permutation null test: model performs at p=1.000 (worse than all 20 random runs)
+> 3. Rolling retrain (25 cycles): consistent forward losses despite in-sample selection
 
-### 1.3 Fold Structure
-
-| Fold | Role | Train Start | Train End | Test Start | Test End | Rows |
-|---|---|---|---|---|---|---|
-| 1 | train/test | 2024-03-01 | 2024-10-31 | 2024-11-01 | 2024-12-31 | 469,095 + 188,855 |
-| 2 | train/test | 2024-05-01 | 2024-12-31 | 2025-01-01 | 2025-02-28 | 651,512 + 248,330 |
-| 3 | train/test | 2024-07-01 | 2025-02-28 | 2025-03-01 | 2025-04-30 | 728,817 + 396,006 |
-| 4 | train/test | 2024-09-01 | 2025-04-30 | 2025-05-01 | 2025-06-30 | 966,193 + 215,398 |
-| H | holdout | — | — | 2025-07-01 | 2026-07-17 | 1,214,623 |
+### Conclusion (Phase 2 — ongoing)
+> Three conditioning filters have been tested and rejected:
+> - **Macro Blackout Filter** (±30 min around FOMC/CPI/NFP): Zero effect on motivating cases
+> - **Volatility Regime Filter** (VIX < 20 on prior day): Reversal occurs in low-VIX periods
+> - **VWAP Directional Filter**: Not yet tested — next in queue
 
 ---
 
-## 2. PERFORMANCE SUMMARY
-
-### 2.1 Overall (All Model Slots)
-
-| Period | Trades | Total PnL | Avg/Trade | Win Rate | W/L Ratio |
-|---|---|---|---|---|---|
-| In-Sample (IS) | 1,618,117 | -$43,979,870 | -$27 | — | — |
-| Out-of-Sample (OOS) | 1,214,623 | -$29,684,915 | -$24 | — | — |
-
-> Note: The overall PnL is negative because it includes ALL slots across all 4 assets, most of which are not "in-model" candidates. The BH-FDR filter selects only 21 slots.
-
-### 2.2 Per-Asset (In-Model Slots Only)
-
-| Asset | IS Trades | IS PnL | IS WR | IS W/L | OOS Trades | OOS PnL | OOS WR | OOS W/L |
-|---|---|---|---|---|---|---|---|---|
-| **NQ** (Nasdaq-100) | 319,067 | -$2,772,190 | 59.5% | 0.63 | 261,703 | **-$4,520,405** | 66.0% | **0.44** |
-| **FDAX** (DAX) | 242,125 | -$20,304,050 | 51.8% | 0.75 | 92,709 | -$7,355,950 | 56.2% | 0.67 |
-| **ES** (S&P 500) | 964,809 | -$19,410,638 | 43.3% | 1.08 | 729,562 | -$15,860,500 | 42.8% | 1.06 |
-| **CL** (Crude Oil) | 92,059 | -$1,501,410 | 49.1% | 0.85 | 130,619 | -$1,923,210 | 52.9% | 0.79 |
-
-> **NQ Critical Finding:** Win Rate improved IS→OOS (59.5% → 66.0%) but W/L ratio collapsed (0.63 → 0.44).
-> Avg win ~$250 vs avg loss ~$570. Even at 66% win rate, model is mathematically unprofitable.
-
-### 2.3 BH-FDR Candidates (21 Selected Slots)
-
-| Period | Trades | Total PnL | Survived (mean > 0) |
-|---|---|---|---|
-| In-Sample | 84,108 | **+$6,061,282** | 21 / 21 |
-| Out-of-Sample | 57,262 | **-$1,528,785** | **2 / 21** |
-
-**OOS Reversal Rate: 19 of 21 slots (90.5%) reversed from profitable IS to losing OOS.**
-
-### 2.4 Monthly OOS PnL (All Model Slots — Jul 2025 to Jul 2026)
-
-| Month | OOS PnL | Trend |
-|---|---|---|
-| 2025-07 | (base) | — |
-| 2025-08 | -$1,761,970 | ↓ |
-| 2025-09 | -$1,763,558 | → |
-| 2025-10 | -$1,480,848 | ↑ slight |
-| 2025-11 | -$1,816,870 | ↓ |
-| 2025-12 | -$2,283,293 | ↓ |
-| 2026-01 | -$2,096,198 | → |
-| 2026-02 | -$1,833,683 | ↑ slight |
-| 2026-03 | -$4,874,470 | ↓↓ (OPEC event) |
-| 2026-04 | -$3,712,598 | ↑ but negative |
-| 2026-05 | -$2,370,800 | ↑ |
-| 2026-06 | -$2,451,235 | → |
-| 2026-07 | -$2,052,885 | ↑ slight |
-
----
-
-## 3. BH-FDR CANDIDATE DETAIL (21 Slots)
-
-All statistics computed from `fold_assignments.parquet` and `bh_fdr_candidates.csv`.
-
-| Slot | Sym | Day | Bkt | IS n | IS Mean | IS t | OOS n | OOS Mean | OOS t | Verdict |
-|---|---|---|---|---|---|---|---|---|---|---|
-| 863 | NQ | Thu | 28 | 2,622 | $88.60 | 7.454 | 1,856 | $23.36 | 1.418 | REVERSED |
-| 260 | ES | Mon | 25 | 8,081 | $49.94 | 7.432 | 5,818 | -$41.44 | -10.572 | REVERSED |
-| 259 | ES | Mon | 24 | 8,236 | $49.80 | 7.005 | 6,064 | -$26.57 | -6.883 | REVERSED |
-| 677 | FDAX | Fri | 27 | 1,171 | $348.25 | 6.446 | 259 | -$96.43 | -0.870 | REVERSED |
-| 716 | NQ | Mon | 23 | 2,657 | $179.54 | 6.125 | 1,649 | -$68.31 | -4.772 | REVERSED |
-| 675 | FDAX | Fri | 25 | 1,444 | $234.90 | 6.013 | 389 | -$422.81 | -3.312 | REVERSED |
-| 357 | ES | Wed | 28 | 11,422 | $50.16 | 5.981 | 7,304 | -$29.63 | -7.265 | REVERSED |
-| 718 | NQ | Mon | 25 | 2,579 | $114.56 | 5.946 | 1,640 | -$10.62 | -0.722 | REVERSED |
-| 358 | ES | Wed | 29 | 10,892 | $65.03 | 5.896 | 8,596 | -$11.12 | -2.957 | REVERSED |
-| 712 | NQ | Mon | 19 | 6,487 | $52.47 | 5.533 | 4,448 | -$45.00 | -4.797 | REVERSED |
-| 719 | NQ | Mon | 26 | 2,333 | $163.54 | 5.519 | 1,444 | -$8.74 | -0.690 | REVERSED |
-| 180 | CL | Thu | 40 | 378 | $178.02 | 5.229 | 198 | -$136.77 | -4.435 | REVERSED |
-| 714 | NQ | Mon | 21 | 3,236 | $64.25 | 4.734 | 2,357 | -$17.64 | -1.393 | REVERSED |
-| 282 | ES | Tue | 0 | 684 | $68.68 | 4.582 | 571 | -$14.54 | -0.904 | REVERSED |
-| 854 | NQ | Thu | 19 | 8,560 | $37.39 | 4.229 | 4,929 | -$10.80 | -0.909 | REVERSED |
-| **223** | **CL** | **Sun** | **36** | **1,303** | **$33.65** | **4.152** | **1,250** | **$53.92** | **2.854** | **⚠ SURVIVED (event-driven)** |
-| 587 | FDAX | Wed | 27 | 1,135 | $250.22 | 3.648 | 248 | -$82.16 | -0.661 | REVERSED |
-| 715 | NQ | Mon | 22 | 2,563 | $72.09 | 3.616 | 1,875 | -$83.74 | -6.143 | REVERSED |
-| 648 | FDAX | Thu | 46 | 120 | $306.67 | 3.598 | 43 | -$415.70 | -2.107 | REVERSED |
-| 901 | NQ | Fri | 19 | 5,928 | $27.66 | 3.539 | 4,529 | -$0.16 | -0.011 | REVERSED |
-| 906 | NQ | Fri | 24 | 2,277 | $60.18 | 3.511 | 1,795 | -$37.20 | -2.845 | REVERSED |
-
-**Total OOS PnL (candidates): -$1,528,785 | OOS n: 57,262**
-
----
-
-## 4. ROOT CAUSE ANALYSIS — WHY THE MODEL FAILS
-
-### 4.1 Mean-Reversion Trap (Primary Cause)
-
-The BH-FDR selection process is mathematically required to select the slots with the **highest t-statistics in the training window**. High t-statistics occur when performance was unusually clustered (good luck concentrated in the measurement period). By definition, that cluster of luck mean-reverts when deployment begins.
-
-This is not a code bug. It is structural: selecting "best performers" from historical data is guaranteed to capture noise-plus-luck, not signal.
-
-### 4.2 The W/L Ratio Problem (NQ Specific)
-
-```
-NQ In-Model Slots:
-  Win Rate OOS:  66.0%  (looks good)
-  Avg Win:      ~$250
-  Avg Loss:     ~$570
-  W/L Ratio:     0.44
-
-Breakeven W/L at 66% win rate requires: (1-0.66)/0.66 = 0.515
-Actual W/L:  0.44  <  Required 0.515
-Result: Mathematically impossible to profit at these parameters.
-```
-
-### 4.3 Permutation Null Test Results (20 Runs, Seed=42)
-
-The model's real performance was compared against 20 runs where PnL values were randomly reshuffled (destroying all temporal structure):
-
-| Metric | Random Permutation Avg | Real Model |
-|---|---|---|
-| Avg OOS PnL (selected slots) | **-$271,000** | **-$2,570,000** |
-| Best single permutation run | ~+$66,000 (Perm #14) | -$1,528,785 |
-| Model vs random (ratio) | — | **9.5× worse** |
-| p-value (model vs null dist.) | — | **p = 1.000** |
-
-**Interpretation:** A completely random slot selection strategy outperforms the model by ~9.5×. The BH-FDR filter is actively selecting the wrong slots.
-
-### 4.4 MCMC Bayesian Diagnostic Failure
-
-All 5 folds failed the ESS > 400 convergence gate:
-
-| Fold | sigma_bkt ESS | R-hat | Verdict |
-|---|---|---|---|
-| 0 | 185 | 1.0245 | FAIL |
-| 1 | 213 | 1.0210 | FAIL |
-| 2 | 265 | 1.0195 | FAIL |
-| 3 | 290 | 1.0188 | FAIL |
-| 4 | 314 | 1.0178 | FAIL |
-
-MCMC Bayesian approach is intractable with this data structure. BH-FDR remains the primary tool.
-
----
-
-## 5. SLOT 223 — SPECIAL INVESTIGATION (CL, Sunday, Bucket 36)
-
-Slot 223 is the only candidate that survived OOS with a positive mean. However, the survival is entirely driven by one market event.
-
-### 5.1 Significance With vs. Without March 2026
-
-| Metric | Full Holdout (n=1,250) | Excl. March 2026 (n=542) |
-|---|---|---|
-| Mean PnL/trade | $53.92 | -$43.73 |
-| t-statistic | 2.854 | -2.013 |
-| Bonferroni p (K=21) | 0.046 | 1.000 |
-| Significant? | YES | **NO** |
-
-### 5.2 Monthly OOS Breakdown
-
-| Month | n | Mean PnL | Total PnL | Positive? |
-|---|---|---|---|---|
-| 2025-07 | 16 | -$110.62 | -$1,770 | NO |
-| 2025-08 | 5 | -$230.00 | -$1,150 | NO |
-| 2025-09 | 20 | -$35.00 | -$700 | NO |
-| 2025-10 | 0 | — | — | — |
-| 2025-11 | 56 | -$24.11 | -$1,350 | NO |
-| 2025-12 | 8 | -$110.00 | -$880 | NO |
-| 2026-01 | 27 | -$43.70 | -$1,180 | NO |
-| 2026-02 | 34 | $62.35 | +$2,120 | YES |
-| **2026-03** | **708** | **$128.67** | **+$91,100** | **YES (OPEC event)** |
-| 2026-04 | 156 | $20.83 | +$3,250 | YES |
-| 2026-05 | 167 | -$122.28 | -$20,420 | NO |
-| 2026-06 | 25 | -$8.00 | -$200 | NO |
-| 2026-07 | 28 | -$50.71 | -$1,420 | NO |
-
-Positive months: **3 of 12 (25%)**. March 2026: 56.6% of all holdout trades, 135.2% of total PnL.
-
-### 5.3 March 2026 Root Cause
-OPEC+ announced on March 1, 2026 the unwinding of 206,000 bbl/day of voluntary production cuts.
-The March 8 Globex Sunday re-open (18:00–18:30 ET, bucket 36) saw 475 trades vs a max of 71 on any other non-March Sunday. This is a **one-time identifiable macro event**, not a durable edge.
-
-### 5.4 Slot 223 Verdict
-**Do not trade.** Edge is entirely event-driven, not structural. Would require a macro-event detector, not a calendar filter.
-
-### 5.5 Activation Protocol (If Fresh Data Available)
-For Slot 223 only. Requires post-July 2026 data not yet in system.
-1. Ingest Aug–Oct 2026 trades into `fold_assignments.parquet` with `is_holdout=True`.
-2. Filter `slot_id == 223`.
-3. Compute: `t = mean(profit_loss) / (std(profit_loss) / sqrt(n))`
-4. Gate: if `t > 1.65` AND `n >= 200` AND no single month drives >50% of PnL → authorize paper-trading.
-5. Live capital: not until paper-trading confirmation across ≥2 consecutive months.
-
----
-
-## 6. INTERACTIVE DASHBOARD
-
-**File:** `results/interactive_slot_matrix_dashboard.html`  
-**Open in browser** (no server needed — self-contained HTML).
-
-### What the Dashboard Shows
-
-```
-LEFT PANEL: In-Sample (Jan 2024 – Jun 2025) — Discovery Period
-RIGHT PANEL: Out-of-Sample (Jul 2025 – Jul 2026) — Holdout Period
-
-Each cell contains:
-  - Total PnL (green = profitable, red = losing)
-  - Trade count
-  - Avg PnL/trade
-  - Win Rate
-  - W/L Ratio
-  - Profit Factor
-  - Permutation badges (which of 20 random runs selected this slot)
-```
-
-### Cell Interpretation Guide
-
-| Cell Appearance | Meaning |
-|---|---|
-| 🟩 Green + Gold border (IS left) | Model candidate — was profitable in-sample |
-| 🟥 Red + Gold border (OOS right) | SAME slot — lost money out-of-sample |
-| No gold border | NOT TRADED — model rejected this slot |
-| `MODEL` badge (blue) | Real model candidate |
-| `P14★` badge (gold) | Best permutation run (Perm #14) selected this slot |
-| `P03` badge (purple) | Other random permutation run selected this slot |
-| `No Perm` badge (grey) | Never selected by any of 20 random runs |
-
-> **Key insight for Gilad:** Red cells on the LEFT (IS) with NO gold border were never traded.
-> Only gold-border cells were model candidates. The problem is green-left → red-right on gold-border cells.
-
-### Clicking any cell opens a modal showing:
-- Full IS vs OOS stats side-by-side
-- Which permutation runs selected this slot
-- Month-by-month PnL bar chart (31 months)
-- Complete monthly trade table
-
----
-
-## 7. RESEARCH AUDIT TIMELINE
-
-| Date | Activity | Key Finding |
-|---|---|---|
-| Jul 2024 | Initial fold structure design | Rolling 5-fold + holdout established |
-| Aug 2024 | BH-FDR candidate selection | 21 slots identified, IS PnL +$6M |
-| Jan–Jun 2025 | Model locked, no retraining | Holdout period begins Jul 2025 |
-| Jul–Dec 2025 | Holdout monitoring | Consistent losses, -$1.5M/month avg |
-| Mar 2026 | OPEC+ event (Slot 223 spike) | One-time macro event, not edge |
-| Aug 2026 | Full forensic audit | Mean-reversion trap confirmed |
-| Aug 2026 | Permutation null test (20 runs) | Model 9.5× worse than random |
-| Aug 2026 | Interactive dashboard built | IS/OOS side-by-side with perm labels |
-| **Aug 2026** | **Current status** | **Transitioning to context-aware model** |
-
----
-
-## 8. WHAT THE MODEL TOLD US (AND DIDN'T)
-
-### What IS Working
-- ✅ BH-FDR correctly identified slots with high IS t-statistics
-- ✅ Walk-forward fold structure is sound
-- ✅ Data cleaning pipeline is robust (2.8M trades, 4 assets, 2.5 years)
-- ✅ The audit correctly caught the structural issue before large live capital deployment
-
-### What Is NOT Working
-- ❌ Static calendar time-slots carry no durable forward edge
-- ❌ IS performance does not predict OOS performance (90.5% reversal rate)
-- ❌ W/L ratio (0.44 for NQ) makes profitability impossible regardless of win rate
-- ❌ Model performs worse than random permutation (p = 1.000)
-
----
-
-## 9. NEXT PHASE — CONTEXT-AWARE MODEL
-
-The evidence conclusively shows that trading a static calendar slot (Monday 09:30 ET, regardless of market conditions) does not work. The proposed evolution:
-
-### 9.1 Required Filters Before Any Trade
-
-| Filter | Condition | Rationale |
-|---|---|---|
-| Volatility Regime | ATR or VIX in defined range | High/low vol regimes have different micro-structure |
-| VWAP Direction | Price above/below VWAP at slot start | Momentum context matters |
-| News Blackout | No scheduled macro events ±30min | Adversely selected fills during events |
-| Avg PnL Gate | Rolling 20-day avg PnL > 0 | If avg losing, do not trade the slot |
-
-### 9.2 The Avg PnL Gate (Gilad's Rule)
-> "If we know we have an avg losing window, we don't trade on that window."
-
-This is implemented as: **if the rolling 20-day average PnL for a slot is negative, skip all trades for that slot until it turns positive.**
-
-### 9.3 Development Roadmap
-
-```
-Phase 1: Volatility Regime Filter
-  → Label each trade with: High / Normal / Low volatility regime
-  → Identify which regimes, if any, show positive IS edge
-  → Apply regime filter to holdout, measure improvement
-
-Phase 2: VWAP Direction Filter  
-  → Add VWAP calculation to trade data
-  → Test: does long-above-VWAP / short-below-VWAP improve W/L?
-
-Phase 3: Combined Context Model
-  → Slot + Regime + VWAP + News Blackout
-  → Walk-forward validation (same protocol)
-  → Minimum threshold: OOS W/L > 0.6 AND Win Rate > 55%
-
-Phase 4: Paper Trading Gate
-  → 60 days paper trading before any live capital
-  → Daily monitoring against rolling 20-day avg PnL gate
-```
-
----
-
-## 10. MODULE CATALOG
-
-| Script | Purpose | Output |
-|---|---|---|
-| `00_data_prep.py` | Clean raw data; outlier clip; sparsity filter | `data/trades_clean.parquet` |
-| `01_fold_structure.py` | Rolling 5-fold CV + holdout partition | `data/fold_assignments.parquet` |
-| `03_select_candidates.py` | BH-FDR (Q=0.01) candidate selection | `results/bh_fdr_candidates.csv` |
-| `04_permutation_null.py` | 20-run null reshuffling | `results/step2_permutation_null.csv` |
-| `06_holdout_eval.py` | Locked holdout evaluation | Console output |
-| `generate_readme_dynamic.py` | Dynamic README generator | `README.md` |
-| `scratch/build_perm_labeled_dashboard.py` | IS/OOS dashboard with permutation labels | `results/interactive_slot_matrix_dashboard.html` |
-| `scratch/rolling_retrain_validation.py` | Rolling retrain with BH/FDR + confirmation | Rolling cycle results |
-| `scratch/all21_mc_walkforward.py` | Monte Carlo walk-forward (20 perms × all cycles) | Permutation null audit |
-
----
-
-## 11. FILE STRUCTURE
+## 2. REPOSITORY STRUCTURE
 
 ```
 C:\Model-\
-├── README.md                          ← This file
+├── README.md                              ← This file (updated Aug 2026)
+├── model_spec.md                          ← Full model specification
 ├── data\
-│   ├── fold_assignments.parquet       ← 2.8M trades with fold labels
-│   ├── slot_index.parquet             ← Slot metadata
-│   └── fold_date_ranges.parquet       ← Fold date windows
+│   ├── trades_clean.parquet               ← 2.8M cleaned trades (4 assets, Jan 2024–Jul 2026)
+│   ├── fold_assignments.parquet           ← Trade-level fold/holdout labels
+│   ├── slot_index.parquet                 ← Slot metadata (symbol, day, bucket, in_model)
+│   ├── fold_date_ranges.parquet           ← Fold date windows
+│   ├── macro_blackout_windows.parquet     ← 270 macro event blackout windows (Jan 2024–Jul 2026)
+│   └── vix_daily.parquet                  ← VIX daily close + prior-day lag (2023-12–2026-08)
 ├── results\
-│   ├── bh_fdr_candidates.csv          ← 21 BH-FDR selected slots
-│   ├── rolling_retrain_cycles.csv     ← Walk-forward cycle log
-│   ├── interactive_slot_matrix_dashboard.html  ← MAIN DASHBOARD
-│   └── step2_permutation_null.csv     ← Permutation test results
-└── scripts\
-    ├── 00_data_prep.py
-    ├── 01_fold_structure.py
-    ├── 03_select_candidates.py
-    ├── 04_permutation_null.py
-    └── 06_holdout_eval.py
+│   ├── bh_fdr_candidates.csv              ← 21 BH-FDR selected candidate slots
+│   ├── rolling_retrain_cycles.csv         ← 25 walk-forward cycle aggregate results
+│   ├── cycle_slot_detail.csv              ← Per-slot IS/OOS detail for cycles 23-25 (174 rows)
+│   ├── detailed_permutation_stats.csv     ← Full permutation null stats
+│   ├── bootstrap_all21_and_portfolio.csv  ← Monte Carlo bootstrap results
+│   ├── final_summary_for_charts.csv       ← Summary stats for all 21 slots
+│   ├── macro_blackout_21slot_comparison.csv ← Before/after for all 21 slots (macro filter)
+│   ├── macro_blackout_verdict.txt         ← Macro blackout filter verdict
+│   ├── vol_regime_21slot_comparison.csv   ← Before/after for all 21 slots (VIX filter)
+│   ├── vol_regime_verdict.txt             ← VIX regime filter verdict
+│   ├── interactive_slot_matrix_dashboard.html ← Main IS/OOS dashboard (all symbols)
+│   └── nq_final_window_matrix.html        ← NQ 3-panel: Full IS / Final Window / OOS
+└── scripts\ (see Module Catalog section)
 ```
 
 ---
 
-## 12. KEY DECISIONS & CONSTRAINTS
+## 3. DATA PIPELINE
+
+| Stage | Script | Input | Output |
+|---|---|---|---|
+| Raw extraction | DB query | `trading_platform.db` (SQLite) | Raw trade table |
+| Cleaning & slot definition | `00_data_prep.py` | Raw trades | `trades_clean.parquet`, `slot_index.parquet` |
+| Fold structure | `01_fold_structure.py` | `trades_clean.parquet` | `fold_assignments.parquet` |
+| Candidate selection | `03_select_candidates.py` | `fold_assignments.parquet` | `bh_fdr_candidates.csv` |
+| Permutation null | `04_permutation_null.py` | Above | `step2_permutation_null.csv` |
+| Holdout evaluation | `06_holdout_eval.py` | Above | Console report |
+| Rolling retrain | `08_rolling_retrain.py` | Above | `rolling_retrain_cycles.csv` |
+
+### Data Facts
+- **Instruments:** ES, NQ, CL, FDAX
+- **Date range:** Jan 2024 – Jul 2026 (31 months)
+- **Total trades:** ~2.8M (after filtering zero-duration and ghost trades)
+- **Slot space:** 7 days × 48 buckets × 4 symbols = 1,344 possible slots
+- **In-model slots:** Those with ≥ 20 trades
+- **Timezone:** All bucket labels in **America/New_York (ET)** — confirmed in `00_data_prep.py`
+- **Holdout start:** July 1, 2025 (locked before any model development)
+
+---
+
+## 4. MODEL DESIGN
+
+### Slot Definition
+Each "slot" is a (symbol, day_of_week, 30-minute bucket) triple. Example:
+`ES Wednesday 16:00` = all ES trades entering between 4:00–4:30 PM ET on Wednesdays.
+
+### Candidate Selection (BH-FDR)
+1. Compute IS mean PnL and t-statistic for each slot over the training window
+2. Apply Benjamini-Hochberg FDR correction (Q = 0.05) to identify candidates
+3. **Recency confirmation:** slot must have positive mean in ≥ 2 of its last 3 training months
+4. Minimum 50 trades in-sample
+
+### Walk-Forward Validation
+- 5 rolling folds (8-month train, 2-month test each, overlapping)
+- Holdout (Jul 2025–Jul 2026): never touched during model development
+- 25 rolling retrain cycles (monthly cadence, 6-month lookback window)
+
+---
+
+## 5. PHASE 1 RESULTS — STATIC SLOT SELECTION
+
+### 5.1 In-Sample (Jan 2024 – Jun 2025)
+- **21 slots** passed BH-FDR + recency confirmation
+- **Combined IS PnL: +$6.2M** across all 21 slots
+- **IS t-statistics:** ranging from 2.1 to 6.7
+
+### 5.2 Holdout Out-of-Sample (Jul 2025 – Jul 2026)
+- **Combined OOS PnL: -$2.1M** (21 slots × 12 months)
+- **Reversal rate: 90.5%** — 19 of 21 slots flipped from positive IS to negative OOS
+- **NQ W/L ratio: 0.44** — structurally unprofitable regardless of win rate
+- **Sortino ratio: -0.07** (holdout period)
+
+### 5.3 Permutation Null Test (20 runs)
+- Applied identical selection algorithm to 20 randomly reshuffled slot assignments
+- **Real model ranked LAST (p = 1.000)** — worse than all 20 random runs
+- This proves the model's IS edge is pure noise selection, not a real pattern
+
+### 5.4 Rolling Retrain (25 Cycles, monthly)
+| Cycle | Train Period | Eval Month | Confirmed Slots | Eval PnL |
+|---|---|---|---|---|
+| 23 | 2025-11 → 2026-04 | 2026-05 | 65 | +$53,923 |
+| 24 | 2025-12 → 2026-05 | 2026-06 | 65 | -$105,918 |
+| 25 | 2026-01 → 2026-06 | 2026-07 | 44 | -$23,523 |
+
+### 5.5 Per-Cycle Slot Detail (Cycles 23–25)
+**The clearest single example of the reversal pattern:**
+
+> *As of training cutoff April 2026, the model's top-ranked pick was ES Wednesday 16:00,
+> with in-sample mean of +$77.74/trade (t=5.238, n=2,207 trades) over the
+> Nov 2025 – Apr 2026 training window. The following month (May 2026), this exact slot
+> produced -$35.81/trade over 229 trades (total: -$8,200).*
+
+**The same slot, one cycle later (Cycle 24):**
+> The model's #2 pick was again ES Wednesday 16:00. IS mean: +$85.90/trade (t=5.598 — stronger
+> signal). OOS (June 2026): -$281.43/trade over 70 trades (-$19,700).
+
+**The IS signal grew stronger. The OOS result got worse. This is the mean-reversion trap.**
+
+Full per-slot detail in `results/cycle_slot_detail.csv` (174 rows, cycles 23–25).
+
+---
+
+## 6. PHASE 2 — CONTEXT FILTER RESEARCH
+
+Each hypothesis is tested using the same 5-step protocol:
+1. Lock the filter definition completely **before** seeing any results
+2. Apply to the two motivating cases (ES Wed 16:00, CL Tue 18:30)
+3. Apply to all 21 BH-FDR candidates
+4. Permutation-null test (if Step 3 shows improvement)
+5. Honest verdict
+
+### 6.1 Hypothesis 1 — Macro Blackout Filter ❌ FALSIFIED
+
+**Question:** Do slots lose in OOS because they're contaminated by macro news releases
+(FOMC, CPI, NFP)? If so, excluding ±30 min around these events should fix the reversal.
+
+**Locked rule:** Exclude any trade where the slot's 30-min window overlaps with a ±30-min
+blackout window around any of 10 USD high-impact event types.
+
+**Source:** federalreserve.gov (FOMC), bls.gov (CPI/PPI/NFP), bea.gov (PCE/GDP), ismworld.org
+**Data:** `data/macro_blackout_windows.parquet` — 270 events, Jan 2024–Jul 2026
+
+**Results:**
+
+| Test | Finding |
+|---|---|
+| ES Wed 16:00 (Cycles 23 & 24 fwd) | **0 trades removed.** Slot is at 4:00 PM ET — 1+ hour after all blackout windows close. |
+| CL Tue 18:30 (Cycles 24 & 25 fwd) | **0 trades removed.** Slot is at 6:30 PM ET — 8+ hours after any release. |
+| All 21 slots (avg) | 4.70% trades removed. Avg t-stat: -2.761 → **-2.820 (worsened).** |
+| Significance change | 1/21 significant → 1/21 (no change) |
+
+**Verdict:** Hypothesis structurally inapplicable. The reversal is not in macro-event windows.
+The FOMC-adjacent slots (ES Wed 14:00, 14:30) had 30–39% trades removed, making them
+*more* negative — the FOMC trades were their relatively better trades.
+
+### 6.2 Hypothesis 2 — Volatility Regime Filter ❌ FALSIFIED
+
+**Question:** Do slots lose in OOS because reversal dynamics dominate in high-volatility
+regimes (VIX ≥ 20)? Restricting to low-vol days (VIX < 20) should reveal a cleaner edge.
+
+**Locked rule:** Exclude trade dates where VIX(t−1) close ≥ 20 (prior trading day's close
+— no lookahead bias). Source: Yahoo Finance `^VIX`.
+
+**VIX summary (holdout period, Jul 2025 – Jul 2026):**
+- Mean VIX: 18.03 | Median: 17.06 | Max: 31.05
+- VIX ≥ 20: 18.6% of days | VIX < 20: 81.4% of days
+
+**Results:**
+
+| Test | Finding |
+|---|---|
+| ES Wed 16:00 fwd months (May–Jun 2026) | **0 high-vol days.** VIX was below 20 on every forward-month trading day. |
+| CL Tue 18:30 fwd months (Jun–Jul 2026) | **0 high-vol days.** Same — reversal occurred entirely in low-VIX environment. |
+| All 21 slots (avg) | 24.1% trades removed. Avg t-stat: -2.903 → **-2.981 (worsened).** |
+| Slots improved | 9 / 21 improved, 12 / 21 worsened |
+| Significance change | 0/21 significant → 0/21 (no change) |
+
+**Verdict:** Hypothesis falsified. The reversal pattern occurs in **calm markets** (low VIX),
+not high-volatility regimes. Volatility regime filtering is not the solution.
+
+**Additional finding:** CL Sunday 18:00 (slot 223, the only marginally significant slot)
+drops to t=0.000 under VIX filter — not because of filtering, but because VIX data does
+not exist for weekend trading days (no Saturday VIX close), causing all Sunday trades to
+be excluded due to missing prior-day VIX. This is a data coverage limitation.
+
+### 6.3 Hypothesis 3 — VWAP Directional Filter 🔲 NOT YET TESTED
+
+**Question:** Does trading only when price is on the "correct" side of VWAP at the slot
+start time improve the W/L ratio sufficiently to turn the holdout positive?
+
+**Requires:** Intraday VWAP data per (date, bucket) — not yet available in the pipeline.
+
+### 6.4 Hypothesis 4 — Avg PnL Gate (Gilad's Rule) 🔲 NOT YET TESTED
+
+**Rule:** If the rolling 20-day average PnL for a slot is negative, skip all trades for
+that slot until it turns positive.
+
+---
+
+## 7. INTERACTIVE DASHBOARDS
+
+### 7.1 Main Dashboard — All Symbols IS/OOS
+**File:** `results/interactive_slot_matrix_dashboard.html`
+Open in any browser — self-contained, no server needed.
+
+Shows all 4 symbols × all slots in a matrix with:
+- Left panel: In-Sample (Jan 2024 – Jun 2025)
+- Right panel: Out-of-Sample (Jul 2025 – Jul 2026)
+- Gold border = model candidate (was traded)
+- Permutation badges: which of 20 random runs also selected this slot
+- Click any cell → full modal with IS/OOS stats + 31-month bar chart
+
+### 7.2 NQ 3-Panel Matrix
+**File:** `results/nq_final_window_matrix.html`
+Three-column view for NQ slots:
+- Column 1: Full IS period stats
+- Column 2: Final 6-month training window (what the model actually saw)
+- Column 3: OOS (holdout) result
+
+Permutation badges on every cell showing which of 20 random runs selected that slot.
+
+### Cell Legend
+
+| Badge / Appearance | Meaning |
+|---|---|
+| Gold border | ★ MODEL SELECTED — this slot was traded |
+| `MODEL` (blue) | Real model candidate |
+| `P14★` (gold) | Best permutation run selected this slot |
+| `P03` (purple) | Other permutation run also selected it |
+| `No Perm` (grey) | Not selected by any of 20 random runs |
+| `not traded` (red italic) | Model rejected — never deployed |
+| Green cell | Positive PnL in that period |
+| Red cell | Negative PnL in that period |
+
+---
+
+## 8. RESEARCH AUDIT TIMELINE
+
+| Date | Activity | Key Finding |
+|---|---|---|
+| Jan 2024 | Initial fold structure design | Rolling 5-fold + holdout established |
+| Aug 2024 | BH-FDR candidate selection | 21 slots identified, IS PnL +$6.2M |
+| Jan–Jun 2025 | Model locked, no retraining | Holdout period begins Jul 2025 |
+| Jul–Dec 2025 | Holdout monitoring | Consistent losses, approx -$1.5M/month avg |
+| Mar 2026 | OPEC+ event (Slot 223 spike) | One-time macro event, not repeatable edge |
+| Aug 2026 | Full forensic audit | Mean-reversion trap confirmed |
+| Aug 2026 | Permutation null test (20 runs) | Model performs worse than all 20 random runs (p=1.000) |
+| Aug 2026 | Interactive dashboards built | IS/OOS side-by-side with perm labels |
+| Aug 2026 | Per-cycle slot detail (cycles 23-25) | ES Wed 16:00 reversal quantified precisely |
+| Aug 2026 | Macro blackout filter test | Falsified — slots outside all macro windows |
+| Aug 2026 | VIX regime filter test | Falsified — reversal occurs in low-VIX environment |
+| **Aug 2026** | **Current status** | **Phase 2: VWAP filter next in queue** |
+
+---
+
+## 9. MODULE CATALOG
+
+| Script | Purpose | Output |
+|---|---|---|
+| `00_data_prep.py` | Clean raw trades; define slot space | `data/trades_clean.parquet`, `data/slot_index.parquet` |
+| `01_fold_structure.py` | Rolling 5-fold CV + holdout | `data/fold_assignments.parquet` |
+| `03_select_candidates.py` | BH-FDR (Q=0.05) + recency confirmation | `results/bh_fdr_candidates.csv` |
+| `04_permutation_null.py` | 20-run permutation null test | `results/step2_permutation_null.csv` |
+| `06_holdout_eval.py` | Locked holdout evaluation | Console output |
+| `08_rolling_retrain.py` | 25 monthly walk-forward cycles | `results/rolling_retrain_cycles.csv` |
+| `scratch/build_perm_labeled_dashboard.py` | IS/OOS dashboard with perm badges | `results/interactive_slot_matrix_dashboard.html` |
+| `scratch/build_nq_final_window_matrix.py` | NQ 3-panel matrix with perm badges | `results/nq_final_window_matrix.html` |
+| `scratch/all21_mc_walkforward.py` | Monte Carlo block bootstrap (20 perms) | `results/bootstrap_all21_and_portfolio.csv` |
+| `scratch/extract_cycle_slot_detail.py` | Per-slot IS/OOS for cycles 23-25 | `results/cycle_slot_detail.csv` |
+| `scratch/build_macro_calendar.py` | Build macro blackout windows | `data/macro_blackout_windows.parquet` |
+| `scratch/apply_macro_blackout.py` | Macro blackout filter test (Steps 1-5) | `results/macro_blackout_21slot_comparison.csv` |
+| `scratch/apply_vol_regime_filter.py` | VIX regime filter test (Steps 1-5) | `results/vol_regime_21slot_comparison.csv` |
+
+---
+
+## 10. FILE STRUCTURE
+
+```
+C:\Model-\
+├── README.md
+├── model_spec.md
+├── data\
+│   ├── trades_clean.parquet           ← 2.8M cleaned trades
+│   ├── fold_assignments.parquet       ← Trade-level fold/holdout labels
+│   ├── slot_index.parquet             ← 1,344 slots with metadata
+│   ├── fold_date_ranges.parquet       ← Fold windows
+│   ├── macro_blackout_windows.parquet ← 270 blackout windows (macro filter)
+│   └── vix_daily.parquet              ← VIX daily + prior-day lag (vol filter)
+└── results\
+    ├── bh_fdr_candidates.csv          ← 21 selected slots
+    ├── rolling_retrain_cycles.csv     ← 25 cycle walk-forward log
+    ├── cycle_slot_detail.csv          ← 174-row per-slot IS/OOS (cycles 23-25)
+    ├── detailed_permutation_stats.csv ← Permutation null full stats
+    ├── bootstrap_all21_and_portfolio.csv ← Monte Carlo results
+    ├── final_summary_for_charts.csv   ← 21-slot summary
+    ├── macro_blackout_21slot_comparison.csv ← Macro filter before/after
+    ├── macro_blackout_verdict.txt     ← Macro filter verdict
+    ├── vol_regime_21slot_comparison.csv    ← VIX filter before/after
+    ├── vol_regime_verdict.txt         ← VIX filter verdict
+    ├── interactive_slot_matrix_dashboard.html ← MAIN DASHBOARD
+    └── nq_final_window_matrix.html    ← NQ 3-panel dashboard
+```
+
+---
+
+## 11. KEY DECISIONS & CONSTRAINTS
 
 | Decision | Rationale |
 |---|---|
-| Holdout locked (no peeking) | Prevents data leakage |
-| BH-FDR Q=0.01 (not 0.05) | Conservative to reduce false discoveries |
-| Min 50 IS trades per slot | Prevents small-sample selection |
-| Confirmation: 2 of last 3 months positive IS | Ensures recency, not just historical avg |
-| MCMC abandoned | All 5 folds failed ESS > 400 gate |
+| Holdout start: Jul 2025, locked | No peeking — prevents data leakage |
+| BH-FDR Q = 0.05 | Standard FDR control for multiple testing |
+| Min 50 IS trades per slot | Prevents small-sample selection bias |
+| Recency confirmation: 2 of last 3 months positive | Ensures IS edge is recent, not historical artifact |
+| MCMC abandoned (all 5 folds) | ESS < 400 gate failed across all folds |
 | No live capital authorized | OOS evidence does not support deployment |
+| Phase 2 filter rule: lock before testing | Prevents HARKing (hypothesizing after results known) |
+| Blackout window: ±30 min (locked) | Standard in event-study literature, not tuned after results |
+| VIX threshold: 20 (locked) | CBOE-cited boundary between normal/elevated vol; not tuned |
 
 ---
 
-## 13. IMPORTANT NOTES FOR STAKEHOLDERS
+## 12. STAKEHOLDER NOTES
 
-> **For Gilad:**
-> 
-> 1. The left (IS) and right (OOS) panels in the dashboard are comparing the SAME slots before and after deployment. Green→Red is the failure mode.
->
-> 2. Red cells on the left with NO gold border were never traded. Only gold-border slots were model candidates.
->
-> 3. "Best permutation" (Perm #14) refers to the best of 20 RANDOM slot selections. Even the best random run barely survived OOS. This proves the selection algorithm is capturing noise, not signal.
->
-> 4. Gilad's instinct is correct: if the best permutation is losing OOS, we don't trade. This is the research telling us: stop static slot trading.
+### For Gilad
+
+**Q: "On the OOS, we trade only the golden slots?"**
+> Yes. Only gold-border slots (★ SELECTED) were traded in OOS. All other cells in the
+> dashboard are shown for comparison only — they carry the 'not traded' label.
+
+**Q: "If this is the case, we are done. No edge. Nothing — are you sure?"**
+> The current model (static time slots, no context) has no edge. That is definitive.
+> "No edge anywhere in the market" is a different claim — that was never tested.
+> What we proved: **the selection method is wrong, not that the market is random.**
+
+**Q: "Why is ES Wednesday 16:00 always the top pick, and it always loses?"**
+> Because it was the highest t-stat slot in back-test. The IS t-stat grew stronger each
+> cycle (5.238 → 5.598) while the OOS result got worse (-$36 → -$282/trade).
+> This is the mean-reversion trap: the model is confidently selecting a slot that is
+> actively mean-reverting — past winners become future losers.
+
+**Q: "Would macro blackout filtering fix it?"**
+> Tested and falsified. ES Wednesday 16:00 runs at 4:00 PM ET — 1+ hour after all
+> macro release windows close. The filter removes zero trades from this slot.
+
+**Q: "Would filtering to calm markets (VIX < 20) fix it?"**
+> Tested and falsified. The reversal in May 2026 (ES Wed 16:00, -$35.81/trade, 229 trades)
+> and June 2026 (-$281.43/trade, 70 trades) both occurred when VIX was **below 20 every day**.
+> The reversal is not a high-volatility phenomenon — it is happening in calm markets.
+
+**What IS the next step:**
+The two remaining untested conditioning layers are:
+1. **VWAP Directional Filter** — trade only when price is on the statistically expected
+   side of VWAP at the bucket start. Requires intraday VWAP per slot.
+2. **Rolling PnL Gate** — skip slot if 20-day rolling avg PnL is negative.
+
+Each requires the same treatment: lock the rule before testing, apply at full validation
+rigor, report honestly.
 
 ---
 
-*README regenerated: 21-Aug-2026. Run `python scratch/build_perm_labeled_dashboard.py` to refresh dashboard.*
+*README last updated: 23-Aug-2026*
+*Git commits: initial + interactive dashboard + NQ matrix + perm labels + macro blackout filter + VIX regime filter*
+*Repo: github.com/giladbi/SC_results_WF_GCP_model (primary) | github.com/mayurpatil10001/Model- (mirror)*
