@@ -1,0 +1,33 @@
+VOLATILITY REGIME FILTER — TEST VERDICT
+============================================================
+Locked rule: Exclude trade dates where VIX(t-1) >= 20
+Source: Yahoo Finance ^VIX daily close
+Lookahead protection: prior trading day's close (t-1)
+
+MOTIVATING CASES:
+  ES Wednesday 16:00 (May+Jun 2026):
+    ALL:      n=583  mean=$-44.38/trade
+    LOW-VOL:  n=583  mean=$-44.38/trade
+    HIGH-VOL: n=0  mean=$0.00/trade
+
+  CL Tuesday 18:30 (Jun+Jul 2026):
+    ALL:      n=74  mean=$87.16/trade
+    LOW-VOL:  n=74  mean=$87.16/trade
+    HIGH-VOL: n=0  mean=$0.00/trade
+
+ALL 21 SLOTS:
+  Avg t-stat ALL:      -2.903
+  Avg t-stat LOW-VOL:  -2.981  (change: -0.079)
+  Slots improved:      9 / 21
+  Significant ALL:     0 / 21
+  Significant LOW-VOL: 0 / 21
+
+CONCLUSION:
+  Volatility regime filter does NOT resolve the reversal pattern.
+  Average t-stat change: -0.079.
+  Removing high-vol days does not materially improve holdout performance.
+  Hypothesis tested and rejected.
+
+NEXT UNTESTED HYPOTHESIS:
+  VWAP Directional Filter: Trade only when price is on the 'correct'
+  side of VWAP at the time of the bucket. Requires intraday VWAP data.
