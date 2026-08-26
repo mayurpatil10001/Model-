@@ -3,255 +3,416 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Three-Filter Validation Dashboard | SC_results_WF</title>
+<title>Three-Filter Conditioning Study | SC_results_WF</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
-  :root {
-    --bg:#0a0d14;--surface:#111520;--card:#161c2e;--border:#1e2740;
-    --accent:#3b82f6;--accent2:#8b5cf6;--danger:#ef4444;--warn:#f59e0b;
-    --ok:#10b981;--text:#e2e8f0;--muted:#64748b;
-    --mono:'JetBrains Mono',monospace;--sans:'Inter',sans-serif;
-  }
-  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-  body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;line-height:1.6;min-height:100vh}
-  .page{max-width:1320px;margin:0 auto;padding:32px 24px 64px}
-  .header{display:flex;align-items:center;justify-content:space-between;margin-bottom:40px;padding-bottom:24px;border-bottom:1px solid var(--border)}
-  .header-left h1{font-size:22px;font-weight:700;letter-spacing:-.3px}
-  .header-left p{color:var(--muted);font-size:13px;margin-top:4px}
-  .badge{background:#1a0a0a;border:1px solid var(--danger);color:var(--danger);border-radius:6px;padding:6px 14px;font-size:12px;font-weight:600;letter-spacing:.5px}
-  .section{margin-bottom:40px}
-  .section-title{font-size:11px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin-bottom:16px;display:flex;align-items:center;gap:10px}
-  .section-title::after{content:'';flex:1;height:1px;background:var(--border)}
-  .cards{display:grid;grid-template-columns:repeat(5,1fr);gap:14px}
-  .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px 16px;position:relative;overflow:hidden;transition:border-color .2s,transform .2s}
-  .card:hover{border-color:#2a3a60;transform:translateY(-2px)}
-  .card::before{content:'';position:absolute;inset:0 0 auto 0;height:3px;border-radius:12px 12px 0 0}
-  .card.base::before{background:var(--muted)}.card.macro::before{background:var(--warn)}.card.vix::before{background:var(--accent2)}.card.vwap::before{background:var(--accent)}.card.combo::before{background:var(--danger)}
-  .card-label{font-size:10px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
-  .card-mean{font-size:24px;font-weight:700;font-family:var(--mono);color:var(--danger);margin-bottom:6px}
-  .card-mean.pos{color:var(--ok)}
-  .card-sub{font-size:11px;color:var(--muted);margin-bottom:12px}
-  .card-meta{display:flex;flex-direction:column;gap:4px}
-  .card-row{display:flex;justify-content:space-between;font-size:12px}
-  .card-row span:first-child{color:var(--muted)}.card-row span:last-child{font-family:var(--mono)}
-  .p-neg-bar{margin-top:12px;height:4px;background:var(--border);border-radius:2px}
-  .p-neg-fill{height:100%;border-radius:2px;background:var(--danger)}
-  .verdict-chip{display:inline-block;margin-top:12px;font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;padding:3px 10px;border-radius:20px}
-  .chip-fail{background:rgba(239,68,68,.15);color:var(--danger)}.chip-gate{background:rgba(245,158,11,.15);color:var(--warn)}
-  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-  .chart-panel{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px}
-  .chart-panel h3{font-size:14px;font-weight:600;margin-bottom:6px}
-  .chart-panel p{font-size:12px;color:var(--muted);margin-bottom:20px}
-  .chart-wrap{position:relative;height:280px}.chart-wrap-lg{position:relative;height:360px}
-  .slot-table-wrap{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden}
-  .slot-table-header{padding:20px 24px 14px;border-bottom:1px solid var(--border)}
-  .slot-table-header h3{font-size:14px;font-weight:600}
-  .slot-table-header p{font-size:12px;color:var(--muted);margin-top:4px}
-  table{width:100%;border-collapse:collapse}
-  thead tr{background:#0d1120}
-  th{padding:10px 14px;text-align:left;font-size:11px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--muted)}
-  th.num,td.num{text-align:right}
-  tbody tr{border-top:1px solid var(--border);transition:background .15s}
-  tbody tr:hover{background:rgba(255,255,255,.02)}
-  td{padding:9px 14px;font-size:12px;font-family:var(--mono)}
-  td.lbl{font-family:var(--sans);font-weight:500}
-  .neg{color:var(--danger)}.pos{color:var(--ok)}
-  .imp{color:var(--ok);font-size:11px;font-weight:700}.wor{color:var(--danger);font-size:11px;font-weight:700}
-  .tab-row{display:flex;gap:2px;margin-bottom:14px}
-  .tab{padding:7px 16px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;background:transparent;color:var(--muted);border:none;transition:all .15s}
-  .tab:hover{background:rgba(255,255,255,.05);color:var(--text)}.tab.active{background:var(--accent);color:#fff}
-  .verdict-box{background:linear-gradient(135deg,#0f0a1a 0%,#150d24 100%);border:1px solid #2d1a4a;border-radius:14px;padding:32px 36px}
-  .verdict-box h2{font-size:17px;font-weight:700;margin-bottom:16px;color:#a78bfa}
-  .verdict-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
-  .verdict-item{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:8px;padding:14px 16px}
-  .verdict-item h4{font-size:12px;color:var(--muted);margin-bottom:6px}
-  .verdict-item p{font-size:13px;font-weight:500}
-  .verdict-final{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.3);border-radius:8px;padding:16px 20px}
-  .verdict-final p{font-size:14px;line-height:1.7;color:#fca5a5}
-  .verdict-final strong{color:#fff}
-  @media(max-width:1000px){.cards{grid-template-columns:repeat(3,1fr)}.two-col{grid-template-columns:1fr}.verdict-grid{grid-template-columns:1fr}}
+:root{--bg:#0a0d14;--surface:#111520;--card:#161c2e;--card2:#12182b;--border:#1e2740;
+  --accent:#3b82f6;--accent2:#8b5cf6;--danger:#ef4444;--warn:#f59e0b;--ok:#10b981;
+  --neutral:#94a3b8;--text:#e2e8f0;--muted:#64748b;
+  --mono:'JetBrains Mono',monospace;--sans:'Inter',sans-serif}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;line-height:1.6;min-height:100vh}
+.page{max-width:1400px;margin:0 auto;padding:28px 24px 80px}
+
+/* Header */
+.hdr{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:32px;padding-bottom:20px;border-bottom:1px solid var(--border)}
+.hdr h1{font-size:20px;font-weight:700;letter-spacing:-.3px;margin-bottom:4px}
+.hdr p{color:var(--muted);font-size:12px}
+.status-badge{background:#0f1a2a;border:1px solid var(--accent);color:var(--accent);border-radius:6px;padding:6px 14px;font-size:11px;font-weight:600;letter-spacing:.5px;white-space:nowrap;margin-top:4px}
+
+/* Nav tabs */
+.nav{display:flex;gap:2px;margin-bottom:28px;border-bottom:1px solid var(--border);padding-bottom:0;overflow-x:auto}
+.nav-tab{padding:10px 20px;cursor:pointer;font-size:13px;font-weight:500;color:var(--muted);border:none;background:none;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .2s;white-space:nowrap}
+.nav-tab:hover{color:var(--text)}
+.nav-tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
+
+/* Panels */
+.panel{display:none}.panel.active{display:block}
+
+/* Section headers */
+.sec-title{font-size:10px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin-bottom:14px;display:flex;align-items:center;gap:10px}
+.sec-title::after{content:'';flex:1;height:1px;background:var(--border)}
+.section{margin-bottom:36px}
+
+/* Sub-tabs */
+.stab-row{display:flex;gap:4px;margin-bottom:16px;flex-wrap:wrap}
+.stab{padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:500;background:transparent;color:var(--muted);border:1px solid var(--border);transition:all .15s}
+.stab:hover{background:rgba(255,255,255,.04);color:var(--text)}
+.stab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+/* Cards */
+.cards5{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+.cards3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:18px 16px;position:relative;overflow:hidden;transition:border-color .2s}
+.card:hover{border-color:#2a3a60}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:10px 10px 0 0}
+.c-base::before{background:#475569}.c-macro::before{background:var(--warn)}.c-vix::before{background:var(--accent2)}.c-vwap::before{background:var(--accent)}.c-combo::before{background:#e879f9}
+.clabel{font-size:9px;font-weight:700;letter-spacing:.9px;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.cbig{font-size:22px;font-weight:700;font-family:var(--mono);margin-bottom:4px}
+.csub{font-size:11px;color:var(--muted);margin-bottom:10px}
+.cmeta{display:flex;flex-direction:column;gap:3px}
+.crow{display:flex;justify-content:space-between;font-size:11px}
+.crow span:first-child{color:var(--muted)}.crow span:last-child{font-family:var(--mono)}
+.neg{color:var(--danger)}.pos{color:var(--ok)}.neu{color:var(--neutral)}
+.pill{display:inline-block;margin-top:10px;font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:3px 8px;border-radius:20px}
+.pill-info{background:rgba(59,130,246,.15);color:#93c5fd}
+.pill-warn{background:rgba(245,158,11,.15);color:#fcd34d}
+.pill-ok{background:rgba(16,185,129,.15);color:#6ee7b7}
+.pill-neu{background:rgba(148,163,184,.12);color:#94a3b8}
+
+/* Stat strip */
+.stat-strip{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:24px}
+.stat-box{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px 14px}
+.stat-box .lbl{font-size:10px;color:var(--muted);font-weight:600;letter-spacing:.5px;text-transform:uppercase;margin-bottom:4px}
+.stat-box .val{font-size:18px;font-weight:700;font-family:var(--mono)}
+
+/* Table */
+.tbl-wrap{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:auto;max-height:600px}
+.tbl-hdr{padding:16px 20px 12px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.tbl-hdr h3{font-size:13px;font-weight:600}
+.tbl-hdr span{font-size:11px;color:var(--muted)}
+table{width:100%;border-collapse:collapse;min-width:600px}
+thead{position:sticky;top:0;z-index:2}
+thead tr{background:#0d1120}
+th{padding:9px 14px;text-align:left;font-size:10px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+th.r,td.r{text-align:right}
+tbody tr{border-top:1px solid rgba(255,255,255,.04);transition:background .12s}
+tbody tr:hover{background:rgba(255,255,255,.025)}
+td{padding:9px 14px;font-size:12px;font-family:var(--mono);white-space:nowrap}
+td.lbl{font-family:var(--sans);font-weight:500;font-size:13px}
+.bar-inline{display:inline-block;height:5px;border-radius:3px;vertical-align:middle;margin-left:6px}
+td .imp{color:var(--ok);font-size:10px;font-weight:700}
+td .wor{color:var(--danger);font-size:10px;font-weight:700}
+td .neu2{color:var(--muted);font-size:10px;font-weight:700}
+
+/* Charts */
+.chart-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:20px}
+.chart-card h3{font-size:13px;font-weight:600;margin-bottom:4px}
+.chart-card p{font-size:11px;color:var(--muted);margin-bottom:16px}
+.chart-h{position:relative;height:280px}.chart-hl{position:relative;height:360px}.chart-hm{position:relative;height:240px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+
+/* Bootstrap table */
+.boot-tbl{width:100%;border-collapse:collapse;font-size:12px}
+.boot-tbl th{padding:8px 12px;text-align:center;background:#0d1120;color:var(--muted);font-size:10px;font-weight:600;letter-spacing:.5px;text-transform:uppercase}
+.boot-tbl td{padding:9px 12px;text-align:center;border-top:1px solid rgba(255,255,255,.04);font-family:var(--mono)}
+.boot-tbl tr:hover td{background:rgba(255,255,255,.02)}
+
+/* Findings */
+.find-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px}
+.find-card{background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:20px}
+.find-card h4{font-size:12px;font-weight:600;color:var(--neutral);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px}
+.find-card p{font-size:13px;line-height:1.7;color:#cbd5e1}
+.find-card .res{font-size:14px;font-weight:600;margin-top:8px}
+.summ-box{background:linear-gradient(135deg,#0f1320 0%,#131a30 100%);border:1px solid #1e3060;border-radius:12px;padding:28px 32px}
+.summ-box h3{font-size:16px;font-weight:700;color:#93c5fd;margin-bottom:14px}
+.summ-box p{font-size:13px;line-height:1.8;color:#cbd5e1;margin-bottom:12px}
+.summ-box p:last-child{margin-bottom:0}
+.summ-box strong{color:#e2e8f0}
+.key-table{width:100%;border-collapse:collapse;margin-top:20px;font-size:12px}
+.key-table th{padding:8px 14px;text-align:left;background:rgba(255,255,255,.04);color:var(--muted);font-size:10px;letter-spacing:.5px;text-transform:uppercase}
+.key-table td{padding:9px 14px;border-top:1px solid rgba(255,255,255,.04)}
+.key-table td:first-child{font-weight:600;color:#93c5fd}
+
+/* Legend */
+.legend{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:10px}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted)}
+.legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+
+@media(max-width:1100px){.cards5{grid-template-columns:repeat(3,1fr)}.stat-strip{grid-template-columns:repeat(3,1fr)}.grid2{grid-template-columns:1fr}.find-grid{grid-template-columns:1fr}}
+@media(max-width:700px){.cards5{grid-template-columns:1fr 1fr}.stat-strip{grid-template-columns:1fr 1fr}.grid3{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 <div class="page">
 
-<div class="header">
-  <div class="header-left">
-    <h1>Three-Filter Validation Dashboard</h1>
-    <p>SC_results_WF &nbsp;·&nbsp; Holdout Jul 2025–Jul 2026 &nbsp;·&nbsp; 21 BH-FDR candidate slots &nbsp;·&nbsp; 5,000 bootstrap resamples, block=date, seed=42</p>
+<!-- Header -->
+<div class="hdr">
+  <div>
+    <h1>Three-Filter Conditioning Study — Comprehensive Results</h1>
+    <p>SC_results_WF &nbsp;·&nbsp; Holdout: Jul 2025 – Jul 2026 &nbsp;·&nbsp; 21 BH-FDR candidate slots (ES, NQ, CL, FDAX) &nbsp;·&nbsp; 5,000-resample Monte Carlo block bootstrap (block = trading date, seed = 42)</p>
   </div>
-  <div class="badge">RESEARCH CLOSED — NO EDGE FOUND</div>
+  <div class="status-badge">STUDY COMPLETE — FULL RESULTS AVAILABLE</div>
 </div>
 
-<!-- Scenario Cards -->
-<div class="section">
-  <div class="section-title">Scenario Overview — Bootstrap Mean PnL/Trade &amp; P(mean &lt; 0)</div>
-  <div class="cards">
-    <div class="card base">
-      <div class="card-label">Unfiltered Baseline</div>
-      <div class="card-mean">−$27.16</div>
-      <div class="card-sub">59,810 trades · 21 slots · 273 dates</div>
-      <div class="card-meta">
-        <div class="card-row"><span>P5 / P95</span><span>−$36.29 / −$18.02</span></div>
-        <div class="card-row"><span>Median</span><span>−$27.19</span></div>
-        <div class="card-row"><span>P(neg)</span><span>1.0000</span></div>
-        <div class="card-row"><span>Worst month</span><span>17.5% · ok</span></div>
+<!-- Navigation -->
+<div class="nav">
+  <button class="nav-tab active" onclick="showPanel('overview',this)">Overview</button>
+  <button class="nav-tab" onclick="showPanel('monthly',this)">Monthly Detail</button>
+  <button class="nav-tab" onclick="showPanel('perslot',this)">Per-Slot Detail</button>
+  <button class="nav-tab" onclick="showPanel('bootstrap',this)">Bootstrap Analysis</button>
+  <button class="nav-tab" onclick="showPanel('combo',this)">Combination Results</button>
+  <button class="nav-tab" onclick="showPanel('findings',this)">Study Findings</button>
+</div>
+
+<!-- ───────────────────────── OVERVIEW ───────────────────────────── -->
+<div id="panel-overview" class="panel active">
+  <div class="section">
+    <div class="sec-title">Portfolio-Level Performance by Scenario</div>
+    <div class="cards5" id="overview-cards"></div>
+  </div>
+  <div class="section">
+    <div class="sec-title">Bootstrap Distribution Comparison</div>
+    <div class="grid2">
+      <div class="chart-card">
+        <h3>P5 → P95 Percentile Range — Mean PnL per Trade</h3>
+        <p>Floating bars show the 5th-to-95th percentile range of the bootstrap distribution; markers indicate the observed mean. All scenarios are located in negative territory across the full distribution.</p>
+        <div class="chart-h"><canvas id="ov-boot-range"></canvas></div>
       </div>
-      <div class="p-neg-bar"><div class="p-neg-fill" style="width:100%"></div></div>
-      <span class="verdict-chip chip-fail">SIGNAL FAILS</span>
+      <div class="chart-card">
+        <h3>Probability That Portfolio Mean PnL &lt; 0</h3>
+        <p>Under 5,000 date-block bootstrap resamples, the probability that the true portfolio mean is positive. All individually-tested scenarios exceed the 95% threshold of confidence in a negative mean.</p>
+        <div class="chart-hm"><canvas id="ov-pneg"></canvas></div>
+      </div>
     </div>
-    <div class="card macro">
-      <div class="card-label">A — Macro Blackout</div>
-      <div class="card-mean">−$29.16</div>
-      <div class="card-sub">53,177 trades · removes 11.1% · 21 slots</div>
-      <div class="card-meta">
-        <div class="card-row"><span>P5 / P95</span><span>−$39.18 / −$18.82</span></div>
-        <div class="card-row"><span>Median</span><span>−$29.43</span></div>
-        <div class="card-row"><span>P(neg)</span><span>1.0000</span></div>
-        <div class="card-row"><span>Worst month</span><span>18.7% · ok</span></div>
-      </div>
-      <div class="p-neg-bar"><div class="p-neg-fill" style="width:100%"></div></div>
-      <span class="verdict-chip chip-fail">WORSE THAN BASE</span>
-    </div>
-    <div class="card vix">
-      <div class="card-label">B — VIX Regime (&lt;20)</div>
-      <div class="card-mean">−$29.45</div>
-      <div class="card-sub">45,096 trades · removes 24.6% · 21 slots</div>
-      <div class="card-meta">
-        <div class="card-row"><span>P5 / P95</span><span>−$38.73 / −$19.84</span></div>
-        <div class="card-row"><span>Median</span><span>−$29.48</span></div>
-        <div class="card-row"><span>P(neg)</span><span>1.0000</span></div>
-        <div class="card-row"><span>Worst month</span><span>19.7% · ok</span></div>
-      </div>
-      <div class="p-neg-bar"><div class="p-neg-fill" style="width:100%"></div></div>
-      <span class="verdict-chip chip-fail">WORSE THAN BASE</span>
-    </div>
-    <div class="card vwap">
-      <div class="card-label">C — VWAP Directional</div>
-      <div class="card-mean">−$25.14</div>
-      <div class="card-sub">28,848 trades · removes 48.7% · 17 non-FDAX</div>
-      <div class="card-meta">
-        <div class="card-row"><span>P5 / P95</span><span>−$39.91 / −$10.88</span></div>
-        <div class="card-row"><span>Median</span><span>−$25.29</span></div>
-        <div class="card-row"><span>P(neg)</span><span>0.9968</span></div>
-        <div class="card-row"><span>Worst month</span><span>26.8% · ok</span></div>
-      </div>
-      <div class="p-neg-bar"><div class="p-neg-fill" style="width:99.68%"></div></div>
-      <span class="verdict-chip chip-fail">REJECTED (99.7%)</span>
-    </div>
-    <div class="card combo">
-      <div class="card-label">All 3 Combined (AND)</div>
-      <div class="card-mean">−$34.07</div>
-      <div class="card-sub">18,619 trades · removes 68.4% · 16 valid slots</div>
-      <div class="card-meta">
-        <div class="card-row"><span>Slots improved</span><span>7 / 16</span></div>
-        <div class="card-row"><span>New sig. slots</span><span>0 / 16</span></div>
-        <div class="card-row"><span>t-stat Δ</span><span>+0.845 (artifact)</span></div>
-        <div class="card-row"><span>Slot 223 (CL Sun)</span><span>0 trades survive</span></div>
-      </div>
-      <div class="p-neg-bar"><div class="p-neg-fill" style="width:100%"></div></div>
-      <span class="verdict-chip chip-gate">STEP 5 NOT TRIGGERED</span>
+  </div>
+  <div class="section">
+    <div class="sec-title">Cumulative PnL Walk-Forward — All Scenarios (Jul 2025–Jul 2026)</div>
+    <div class="chart-card">
+      <h3>Cumulative Portfolio PnL by Calendar Month</h3>
+      <p>No single-month concentration was identified in any scenario (largest single-month contribution ≤ 26.8% of cumulative total, well within the 50% concentration threshold). The pattern of results is consistent and distributed across all 13 holdout months.</p>
+      <div class="chart-hl"><canvas id="ov-cumwf"></canvas></div>
     </div>
   </div>
 </div>
 
-<!-- Bootstrap + P(neg) Charts -->
-<div class="section">
-  <div class="section-title">Bootstrap Distributions — 5,000 Resamples (block=date, seed=42)</div>
-  <div class="two-col">
-    <div class="chart-panel">
-      <h3>P5 → P95 Bootstrap Range by Scenario</h3>
-      <p>The entire distribution is negative for all individually-tested scenarios. P(neg) = 100% for Macro and VIX; 99.68% for VWAP.</p>
-      <div class="chart-wrap"><canvas id="bootChart"></canvas></div>
+<!-- ───────────────────────── MONTHLY DETAIL ──────────────────────── -->
+<div id="panel-monthly" class="panel">
+  <div class="section">
+    <div class="sec-title">Full Monthly Breakdown — Select Scenario</div>
+    <div class="stab-row">
+      <button class="stab active" onclick="showMonthly('unfiltered',this)">Unfiltered Baseline</button>
+      <button class="stab" onclick="showMonthly('macro',this)">A — Macro Blackout</button>
+      <button class="stab" onclick="showMonthly('vix',this)">B — VIX Regime</button>
+      <button class="stab" onclick="showMonthly('vwap',this)">C — VWAP Directional</button>
+      <button class="stab" onclick="showMonthly('combo',this)">All 3 Combined</button>
     </div>
-    <div class="chart-panel">
-      <h3>P(mean &lt; 0) — All Scenarios</h3>
-      <p>Probability that the true portfolio mean PnL per trade is negative, under the bootstrap null. All scenarios exceed the 95% rejection threshold.</p>
-      <div class="chart-wrap"><canvas id="pnegChart"></canvas></div>
+    <div id="monthly-stat-strip" class="stat-strip"></div>
+    <div class="grid2" style="margin-bottom:16px">
+      <div class="chart-card">
+        <h3>Monthly Mean PnL per Trade</h3>
+        <p>Green bars indicate months with positive mean PnL per trade; red bars indicate negative months.</p>
+        <div class="chart-h"><canvas id="mo-bar"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h3>Cumulative PnL — This Scenario</h3>
+        <p>Running total of portfolio PnL, built month by month throughout the holdout period.</p>
+        <div class="chart-h"><canvas id="mo-cum"></canvas></div>
+      </div>
+    </div>
+    <div class="tbl-wrap">
+      <div class="tbl-hdr"><h3 id="monthly-tbl-title">Monthly Trade Data</h3><span id="monthly-tbl-sub"></span></div>
+      <table>
+        <thead><tr>
+          <th>Month</th><th class="r">Trades</th><th class="r">Mean PnL/Tr</th>
+          <th class="r">Total PnL</th><th class="r">Cumulative PnL</th><th class="r">% of Total</th>
+        </tr></thead>
+        <tbody id="monthly-tbody"></tbody>
+        <tfoot id="monthly-tfoot" style="border-top:2px solid var(--border)"></tfoot>
+      </table>
     </div>
   </div>
 </div>
 
-<!-- Cumulative PnL -->
-<div class="section">
-  <div class="section-title">Walk-Forward — Cumulative PnL Jul 2025–Jul 2026</div>
-  <div class="chart-panel">
-    <h3>Cumulative Portfolio PnL — All Scenarios</h3>
-    <p>No concentration flag in any scenario (worst month ≤ 26.8%, threshold = 50%). Losses are consistent and distributed across all 13 holdout months with no single outlier month.</p>
-    <div class="chart-wrap-lg"><canvas id="wfChart"></canvas></div>
+<!-- ───────────────────────── PER-SLOT ────────────────────────────── -->
+<div id="panel-perslot" class="panel">
+  <div class="section">
+    <div class="sec-title">Per-Slot Statistics — Select Scenario</div>
+    <div class="stab-row">
+      <button class="stab active" onclick="showSlots('unfiltered',this)">Unfiltered Baseline</button>
+      <button class="stab" onclick="showSlots('macro',this)">A — Macro Blackout</button>
+      <button class="stab" onclick="showSlots('vix',this)">B — VIX Regime</button>
+      <button class="stab" onclick="showSlots('vwap',this)">C — VWAP Directional</button>
+      <button class="stab" onclick="showSlots('combo',this)">All 3 Combined</button>
+    </div>
+    <div id="slot-stat-strip" class="stat-strip"></div>
+    <div class="tbl-wrap">
+      <div class="tbl-hdr">
+        <h3 id="slot-tbl-title">Per-Slot Performance</h3>
+        <span id="slot-tbl-sub"></span>
+      </div>
+      <table>
+        <thead><tr>
+          <th>Slot ID</th><th>Symbol</th><th>Day</th><th>Bucket</th>
+          <th class="r">Trades</th><th class="r">Mean PnL/Tr</th><th class="r">Total PnL</th>
+          <th class="r">t-stat</th><th class="r">Bon. p</th><th class="r">Win Rate</th>
+          <th class="r">+Months</th><th class="r">−Months</th>
+        </tr></thead>
+        <tbody id="slot-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Side-by-side slot comparison -->
+  <div class="section" style="margin-top:32px">
+    <div class="sec-title">Side-by-Side Comparison — All Scenarios per Slot</div>
+    <div class="tbl-wrap">
+      <div class="tbl-hdr"><h3>All Scenarios — Per-Slot Pivot Table</h3><span>Mean PnL / Trade shown. Click column headers to sort.</span></div>
+      <table>
+        <thead><tr>
+          <th>Slot</th><th>Sym</th><th>Day</th><th>Bkt</th>
+          <th class="r">Base Mean</th><th class="r">Macro Mean</th>
+          <th class="r">VIX Mean</th><th class="r">VWAP Mean</th><th class="r">Combo Mean</th>
+          <th class="r">Base t</th><th class="r">Macro t</th>
+          <th class="r">VIX t</th><th class="r">VWAP t</th><th class="r">Combo t</th>
+        </tr></thead>
+        <tbody id="pivot-tbody"></tbody>
+      </table>
+    </div>
   </div>
 </div>
 
-<!-- Monthly Mean PnL -->
-<div class="section">
-  <div class="section-title">Monthly Mean PnL/Trade — Scenario Detail</div>
-  <div class="chart-panel">
-    <h3>Mean PnL per Trade by Month</h3>
-    <p>Use tabs to switch scenario. Positive months (green) exist but are outnumbered. No filter consistently converts negative months to positive.</p>
-    <div class="tab-row">
-      <button class="tab active" onclick="showS(0,this)">Unfiltered</button>
-      <button class="tab" onclick="showS(1,this)">Macro</button>
-      <button class="tab" onclick="showS(2,this)">VIX</button>
-      <button class="tab" onclick="showS(3,this)">VWAP</button>
+<!-- ───────────────────────── BOOTSTRAP ───────────────────────────── -->
+<div id="panel-bootstrap" class="panel">
+  <div class="section">
+    <div class="sec-title">Monte Carlo Block Bootstrap — Methodology &amp; Results</div>
+    <div class="summ-box" style="margin-bottom:24px">
+      <h3>Methodology Note</h3>
+      <p>The bootstrap resampling procedure applied here blocks by <strong>trading date</strong> — on each of the 5,000 iterations, a sample of trading days (with replacement, same size as the original) is drawn, and the portfolio mean PnL per trade is computed from all trades on those days. This design preserves intra-day trade clustering and avoids inflating degrees of freedom.</p>
+      <p>The resulting distribution characterises the variability of the portfolio mean under plausible alternative realisations of the same market regime. A high P(mean &lt; 0) — above the 95% threshold — indicates the portfolio would most likely remain loss-making even if the same strategy had been run on a different, randomly-drawn sequence of the same trading days.</p>
     </div>
-    <div class="chart-wrap"><canvas id="monthlyChart"></canvas></div>
+    <div class="tbl-wrap" style="margin-bottom:24px">
+      <div class="tbl-hdr"><h3>Bootstrap Percentile Summary — All Scenarios</h3><span>5,000 resamples · block = trading date · seed = 42</span></div>
+      <table class="boot-tbl">
+        <thead><tr>
+          <th>Scenario</th><th>N Trades</th><th>N Dates</th><th>Observed Mean</th>
+          <th>Boot Mean</th><th>P5</th><th>P25</th><th>Median</th><th>P75</th><th>P95</th><th>P(neg)</th>
+        </tr></thead>
+        <tbody id="boot-tbody"></tbody>
+      </table>
+    </div>
+    <div class="grid2">
+      <div class="chart-card">
+        <h3>Full Percentile Range — P5 → P95</h3>
+        <p>Each bar represents the 5th–95th percentile interval. The circle marker shows the observed mean. The dashed line marks zero — the "break-even" threshold.</p>
+        <div class="chart-h"><canvas id="bt-range"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h3>P(Portfolio Mean &lt; 0) per Scenario</h3>
+        <p>Horizontal bar showing the bootstrap probability of a negative mean. The red line marks the 95% threshold. All individually-tested scenarios meet or exceed this level.</p>
+        <div class="chart-hm"><canvas id="bt-pneg"></canvas></div>
+      </div>
+    </div>
   </div>
 </div>
 
-<!-- Slot Table -->
-<div class="section">
-  <div class="section-title">Step 4 — Per-Slot: Unfiltered vs All-Three-Combined</div>
-  <div class="slot-table-wrap">
-    <div class="slot-table-header">
-      <h3>16 Non-FDAX Slots Above Statistical Floor (n ≥ 30 after triple filtering)</h3>
-      <p>Slot 223 (CL Sun 18:00) excluded — 0 trades survive all three filters. 4 FDAX slots excluded — no VWAP data available.</p>
+<!-- ───────────────────────── COMBINATION ─────────────────────────── -->
+<div id="panel-combo" class="panel">
+  <div class="section">
+    <div class="sec-title">Combination Filter — AND Logic: Passes All Three Simultaneously</div>
+    <div class="summ-box" style="margin-bottom:20px">
+      <h3>Combination Filter Design</h3>
+      <p>A trade is retained in the combination scenario if and only if it <strong>simultaneously</strong> satisfies all three conditions: (1) it falls outside any macro event blackout window (±30 min), (2) the prior-day VIX reading is below 20, and (3) the entry price is directionally consistent with the 6-hour rolling VWAP. FDAX slots are excluded from this analysis, as VWAP data is not available for that instrument.</p>
+      <p>The AND logic was specified prior to observing any combination results. This is the most conservative interpretation — any trade failing even one filter is excluded on the grounds that at least one conditioning hypothesis identifies it as unfavourable.</p>
     </div>
-    <table>
-      <thead>
-        <tr>
+    <div id="combo-stat-strip" class="stat-strip"></div>
+  </div>
+  <div class="section">
+    <div class="sec-title">Step 4 Gate Assessment — Per-Slot Comparison</div>
+    <div class="tbl-wrap" style="margin-bottom:20px">
+      <div class="tbl-hdr">
+        <h3>Unfiltered vs. Combination — 16 Non-FDAX Slots (n ≥ 30)</h3>
+        <span>Slot 223 (CL Sun 18:00) produced 0 combination trades and is excluded from this table.</span>
+      </div>
+      <table>
+        <thead><tr>
           <th>Slot</th><th>Sym</th><th>Day</th><th>Bucket</th>
-          <th class="num">Unfilt t</th><th class="num">Unfilt Mean</th>
-          <th class="num">Combo t</th><th class="num">Combo Mean</th>
-          <th class="num">Removed</th><th>Δ Direction</th>
-        </tr>
-      </thead>
-      <tbody id="slotBody"></tbody>
-    </table>
+          <th class="r">Unfilt n</th><th class="r">Combo n</th><th class="r">% Retained</th>
+          <th class="r">Unfilt Mean</th><th class="r">Combo Mean</th><th class="r">Δ Mean</th>
+          <th class="r">Unfilt t</th><th class="r">Combo t</th><th>Performance</th>
+        </tr></thead>
+        <tbody id="combo-tbody"></tbody>
+      </table>
+    </div>
+    <div class="grid2">
+      <div class="chart-card">
+        <h3>Combination vs. Unfiltered: t-Statistic by Slot</h3>
+        <p>Grouped bar chart showing t-statistics before and after applying all three filters. A movement toward zero or into positive territory indicates a potentially more favourable distribution, though statistical significance was not reached in any slot.</p>
+        <div class="chart-h"><canvas id="co-tstat"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h3>Combination vs. Unfiltered: Mean PnL/Trade by Slot</h3>
+        <p>Side-by-side comparison of mean PnL per trade. Green segments indicate slots where the combination scenario produced a higher mean; red indicates a lower mean relative to the unfiltered baseline.</p>
+        <div class="chart-h"><canvas id="co-mean"></canvas></div>
+      </div>
+    </div>
+  </div>
+  <div class="section">
+    <div class="sec-title">Step 4 Gate — Formal Criteria Assessment</div>
+    <div id="gate-cards" class="cards3"></div>
   </div>
 </div>
 
-<!-- Verdict -->
-<div class="section">
-  <div class="section-title">Step 7 — Final Verdict</div>
-  <div class="verdict-box">
-    <h2>All Three Conditioning Filters — Individually and Combined — Ruled Out</h2>
-    <div class="verdict-grid">
-      <div class="verdict-item">
-        <h4>Filter A: Macro Blackout (±30 min)</h4>
-        <p>❌ P(neg)=1.0000 &nbsp;·&nbsp; Mean worsened to −$29.16/trade &nbsp;·&nbsp; 0/21 significant</p>
+<!-- ───────────────────────── FINDINGS ────────────────────────────── -->
+<div id="panel-findings" class="panel">
+  <div class="section">
+    <div class="sec-title">Study Scope and Context</div>
+    <div class="find-grid">
+      <div class="find-card">
+        <h4>What Was Tested</h4>
+        <p>Three independent conditioning filters were evaluated: a macro event blackout window (excluding trades within ±30 minutes of 10 categories of USD macroeconomic releases), a volatility regime gate (restricting to sessions where the prior-day VIX closing level was below 20), and a VWAP directional alignment filter (requiring trade direction to be consistent with the 6-hour rolling VWAP at entry time). All three were also evaluated in combination using AND logic.</p>
       </div>
-      <div class="verdict-item">
-        <h4>Filter B: VIX Regime (prior-day VIX &lt; 20)</h4>
-        <p>❌ P(neg)=1.0000 &nbsp;·&nbsp; Mean worsened to −$29.45/trade &nbsp;·&nbsp; 0/21 significant</p>
+      <div class="find-card">
+        <h4>Universe Studied</h4>
+        <p>The 21 slots that survived the Benjamini-Hochberg False Discovery Rate correction during in-sample training: ES (Mon–Fri, multiple intraday windows), NQ (Mon, Thu, Fri, multiple windows), CL (Thu 20:00, Sun 18:00), and FDAX (Mon/Thu). The holdout period is July 2025 through July 2026, representing approximately 13 calendar months of out-of-sample performance never seen during model development.</p>
       </div>
-      <div class="verdict-item">
-        <h4>Filter C: VWAP Directional (6h rolling)</h4>
-        <p>❌ P(neg)=0.9968 &nbsp;·&nbsp; Mean −$25.14/trade &nbsp;·&nbsp; 0/17 significant</p>
+      <div class="find-card">
+        <h4>Rigour of the Methodology</h4>
+        <p>Each filter scenario was evaluated using a 5,000-resample Monte Carlo block bootstrap (blocking by trading date to preserve intraday clustering), a 13-month walk-forward monthly decomposition, and a per-slot Bonferroni-adjusted t-test. The combination scenario additionally required satisfying a three-criterion advancement gate before any further inference was drawn.</p>
       </div>
-      <div class="verdict-item">
-        <h4>All 3 Combined (AND logic, FDAX excluded)</h4>
-        <p>❌ Step 4 gate FAILED &nbsp;·&nbsp; 7/16 improved &nbsp;·&nbsp; Mean −$34.07/trade &nbsp;·&nbsp; Step 5 not triggered</p>
+      <div class="find-card">
+        <h4>What Was Not Tested</h4>
+        <p>These tests evaluated existing strategy trades against conditioning rules. Alternative signal architectures, revised entry logic, different instruments, or fundamentally different model structures were outside the scope of this study. The findings are specific to the current reversal strategy as implemented.</p>
       </div>
     </div>
-    <div class="verdict-final">
-      <p>
-        <strong>No conditioning filter, individually or in any combination, produces a result that survives Monte Carlo block bootstrap and walk-forward scrutiny.</strong>
-        P(mean&lt;0) ≥ 96.7% in every scenario. No monthly concentration drives any result — losses distribute consistently across all 13 holdout months.
-        The combination t-stat improvement (+0.845) is a subsampling artifact: removing 68% of trades inflates SE ∝ 1/√n, mechanically pushing t toward zero while mean PnL worsens further.
-        <strong>The research program conclusion is confirmed from every angle: this is a signal problem — calendar-slot identity contains no durable predictive information — not a filtering, execution, regime, or concentration problem.</strong>
-      </p>
+  </div>
+  <div class="section">
+    <div class="sec-title">Filter-by-Filter Summary</div>
+    <div class="find-grid">
+      <div class="find-card">
+        <h4>Filter A — Macro Event Blackout</h4>
+        <p>Removing 11.1% of trades (those falling within ±30 minutes of a macro release) <strong>did not improve portfolio performance</strong>. The bootstrap mean shifted from −$27.16 to −$29.16 per trade, with P(mean &lt; 0) remaining at 1.0000. This is consistent with macro event timing being largely orthogonal to the performance patterns of the candidate slots, many of which operate in off-peak or overnight sessions.</p>
+        <div class="res neg">Did not meet threshold criteria</div>
+      </div>
+      <div class="find-card">
+        <h4>Filter B — Volatility Regime (VIX &lt; 20)</h4>
+        <p>Restricting trading to low-volatility sessions (prior-day VIX below 20) reduced the trade count by 24.6%. Portfolio mean shifted from −$27.16 to −$29.45 per trade. The March 2026 month — where VIX exceeded 20 for most of the month — was nearly absent from this scenario (n = 780 vs. 6,715 unfiltered), yet performance did not improve in the remaining periods. P(mean &lt; 0) = 1.0000.</p>
+        <div class="res neg">Did not meet threshold criteria</div>
+      </div>
+      <div class="find-card">
+        <h4>Filter C — VWAP Directional Alignment</h4>
+        <p>The most trade-restrictive individual filter, removing 48.7% of non-FDAX trades, produced the most modest improvement: −$25.14 vs. −$27.16 per trade. However, with P(mean &lt; 0) = 0.9968 across 5,000 bootstrap resamples, this remains above the 95% confidence threshold. The wide P5–P95 interval (−$39.91 to −$10.88) reflects reduced sample size rather than a genuine shift toward profitability.</p>
+        <div class="res neg">Did not meet threshold criteria</div>
+      </div>
+      <div class="find-card">
+        <h4>All Three Combined (AND Logic)</h4>
+        <p>Applying all three filters simultaneously retained 18,619 trades (31.6% of the non-FDAX holdout). The observed mean was −$34.07 per trade. The combination satisfied one of three Step 4 advancement criteria (t-statistic change of +0.845, attributed to variance inflation from the smaller sample), but did not satisfy the slot improvement rate criterion (7/16 slots improved, threshold 8/16) or the significance criterion (0 newly significant slots).</p>
+        <div class="res neg">Step 4 gate not satisfied — Step 5 not triggered</div>
+      </div>
+    </div>
+  </div>
+  <div class="section">
+    <div class="sec-title">Consolidated Summary and Forward Perspective</div>
+    <div class="summ-box">
+      <h3>Study Summary</h3>
+      <p>This study applied three independent, pre-specified conditioning hypotheses to the 21-slot holdout portfolio: macro event avoidance, volatility regime selection, and VWAP-based directional alignment. Each was tested individually using a full Monte Carlo block bootstrap and monthly walk-forward decomposition. Their combination was subsequently tested using AND logic with a formal three-criterion gate.</p>
+      <p><strong>None of the four tested scenarios produced a result consistent with a conditioning-based improvement in portfolio performance.</strong> The bootstrap P(mean &lt; 0) ranged from 0.9968 to 1.0000 across all scenarios. Monthly decomposition confirmed that the pattern of results is consistent and distributed — not concentrated in any single month — ruling out a temporal anomaly as the driver.</p>
+      <p>The gross-versus-net PnL comparison completed earlier in this study confirmed that execution quality (slippage, commission) is not a material contributor to the observed performance. The three conditioning filters now confirm that the performance is not recoverable through trade timing (macro avoidance), regime selection (low-VIX sessions), or directional pre-screening (VWAP alignment).</p>
+      <p>These findings, taken together with the earlier in-sample validation work, point toward <strong>signal-level refinement</strong> as the most productive area for further investigation. The calendar-slot feature set — day-of-week, intraday bucket, and instrument — as currently constructed does not appear to encode durable directional predictive information of sufficient magnitude in the holdout period. Alternative feature engineering, model architectures, or strategy objectives (e.g. volatility targeting rather than directional reversal) would represent the natural next directions for this research programme.</p>
+      <table class="key-table">
+        <thead><tr><th>Filter Tested</th><th>Observed Mean PnL/Trade</th><th>P(mean &lt; 0)</th><th>Bootstrap P95</th><th>Study Outcome</th></tr></thead>
+        <tbody>
+          <tr><td>Unfiltered baseline</td><td class="neg">−$27.16</td><td>1.0000</td><td>−$18.02</td><td>Reference</td></tr>
+          <tr><td>A — Macro Blackout</td><td class="neg">−$29.16</td><td>1.0000</td><td>−$18.82</td><td>No improvement demonstrated</td></tr>
+          <tr><td>B — VIX Regime (&lt;20)</td><td class="neg">−$29.45</td><td>1.0000</td><td>−$19.84</td><td>No improvement demonstrated</td></tr>
+          <tr><td>C — VWAP Directional</td><td class="neg">−$25.14</td><td>0.9968</td><td>−$10.88</td><td>Marginal; does not meet confidence threshold</td></tr>
+          <tr><td>All 3 Combined (AND)</td><td class="neg">−$34.07</td><td>—</td><td>—</td><td>Step 4 gate not satisfied; not advanced to bootstrap</td></tr>
+        </tbody>
+      </table>
     </div>
   </div>
 </div>
@@ -259,112 +420,395 @@
 </div><!-- /page -->
 
 <script>
-const months = ['2025-07','2025-08','2025-09','2025-10','2025-11','2025-12','2026-01','2026-02','2026-03','2026-04','2026-05','2026-06','2026-07'];
-const cumPnL = {
-  unfiltered:[-60310,-147260,-268455,-353798,-388410,-511585,-483735,-661013,-944945,-1134938,-1418875,-1578353,-1624530],
-  macro:     [-66833,-173168,-314880,-363985,-392458,-465683,-413605,-592543,-882045,-1072750,-1360523,-1504705,-1550883],
-  vix:       [-59995,-111348,-234175,-286143,-335893,-457378,-512625,-613170,-702738,-868735,-1130443,-1289720,-1328033],
-  vwap:      [16475,-21690,-118135,-171900,-145563,-173443,-128245,-266825,-306775,-500990,-680078,-717910,-725338],
+// ── Embedded data ─────────────────────────────────────────────────────────
+const D = {"unfiltered":{"slots":[{"n":204,"mean":-133.33,"t":-4.451,"bon_p":1,"total":-27200.0,"win_rate":42.2,"pos_months":0,"neg_months":13,"slot_id":180,"symbol":"CL","day":"Thu","bucket":"20:00","is_fdax":false},{"n":1311,"mean":45.06,"t":2.462,"bon_p":0.1463,"total":59069.99,"win_rate":64.8,"pos_months":3,"neg_months":9,"slot_id":223,"symbol":"CL","day":"Sun","bucket":"18:00","is_fdax":false},{"n":6141,"mean":-26.95,"t":-7.062,"bon_p":1,"total":-165475.0,"win_rate":40.4,"pos_months":2,"neg_months":11,"slot_id":259,"symbol":"ES","day":"Mon","bucket":"12:00","is_fdax":false},{"n":5867,"mean":-41.58,"t":-10.694,"bon_p":1,"total":-243937.5,"win_rate":38.6,"pos_months":1,"neg_months":12,"slot_id":260,"symbol":"ES","day":"Mon","bucket":"12:30","is_fdax":false},{"n":572,"mean":-14.64,"t":-0.912,"bon_p":1,"total":-8375.0,"win_rate":44.9,"pos_months":5,"neg_months":8,"slot_id":282,"symbol":"ES","day":"Tue","bucket":"00:00","is_fdax":false},{"n":7395,"mean":-30.14,"t":-7.478,"bon_p":1,"total":-222900.0,"win_rate":40.9,"pos_months":2,"neg_months":11,"slot_id":357,"symbol":"ES","day":"Wed","bucket":"14:00","is_fdax":false},{"n":8775,"mean":-12.75,"t":-3.449,"bon_p":1,"total":-111862.5,"win_rate":44.9,"pos_months":4,"neg_months":9,"slot_id":358,"symbol":"ES","day":"Wed","bucket":"14:30","is_fdax":false},{"n":248,"mean":-82.16,"t":-0.661,"bon_p":1,"total":-20375.0,"win_rate":49.6,"pos_months":3,"neg_months":10,"slot_id":587,"symbol":"FDAX","day":"Wed","bucket":"13:30","is_fdax":true},{"n":43,"mean":-415.7,"t":-2.107,"bon_p":1,"total":-17875.0,"win_rate":53.5,"pos_months":4,"neg_months":6,"slot_id":648,"symbol":"FDAX","day":"Thu","bucket":"23:00","is_fdax":true},{"n":392,"mean":-422.96,"t":-3.339,"bon_p":1,"total":-165800.0,"win_rate":52.3,"pos_months":4,"neg_months":9,"slot_id":675,"symbol":"FDAX","day":"Fri","bucket":"12:30","is_fdax":true},{"n":260,"mean":-97.21,"t":-0.881,"bon_p":1,"total":-25275.0,"win_rate":57.7,"pos_months":7,"neg_months":6,"slot_id":677,"symbol":"FDAX","day":"Fri","bucket":"13:30","is_fdax":true},{"n":4955,"mean":-42.86,"t":-5.061,"bon_p":1,"total":-212360.0,"win_rate":62.2,"pos_months":2,"neg_months":11,"slot_id":712,"symbol":"NQ","day":"Mon","bucket":"09:30","is_fdax":false},{"n":2476,"mean":-17.51,"t":-1.45,"bon_p":1,"total":-43345.0,"win_rate":62.9,"pos_months":3,"neg_months":10,"slot_id":714,"symbol":"NQ","day":"Mon","bucket":"10:30","is_fdax":false},{"n":1941,"mean":-81.37,"t":-6.169,"bon_p":1,"total":-157940.0,"win_rate":60.9,"pos_months":3,"neg_months":10,"slot_id":715,"symbol":"NQ","day":"Mon","bucket":"11:00","is_fdax":false},{"n":1688,"mean":-67.73,"t":-4.838,"bon_p":1,"total":-114325.0,"win_rate":61.2,"pos_months":1,"neg_months":12,"slot_id":716,"symbol":"NQ","day":"Mon","bucket":"11:30","is_fdax":false},{"n":1681,"mean":-12.05,"t":-0.839,"bon_p":1,"total":-20260.0,"win_rate":67.9,"pos_months":4,"neg_months":9,"slot_id":718,"symbol":"NQ","day":"Mon","bucket":"12:30","is_fdax":false},{"n":1463,"mean":-8.08,"t":-0.646,"bon_p":1,"total":-11815.0,"win_rate":67.1,"pos_months":5,"neg_months":8,"slot_id":719,"symbol":"NQ","day":"Mon","bucket":"13:00","is_fdax":false},{"n":5565,"mean":-14.9,"t":-1.409,"bon_p":1,"total":-82905.0,"win_rate":64.5,"pos_months":5,"neg_months":8,"slot_id":854,"symbol":"NQ","day":"Thu","bucket":"09:30","is_fdax":false},{"n":1925,"mean":23.01,"t":1.448,"bon_p":1,"total":44300.0,"win_rate":68.0,"pos_months":8,"neg_months":5,"slot_id":863,"symbol":"NQ","day":"Thu","bucket":"14:00","is_fdax":false},{"n":5057,"mean":-1.57,"t":-0.117,"bon_p":1,"total":-7930.0,"win_rate":64.1,"pos_months":4,"neg_months":9,"slot_id":901,"symbol":"NQ","day":"Fri","bucket":"09:30","is_fdax":false},{"n":1851,"mean":-36.71,"t":-2.888,"bon_p":1,"total":-67945.0,"win_rate":63.4,"pos_months":3,"neg_months":10,"slot_id":906,"symbol":"NQ","day":"Fri","bucket":"12:00","is_fdax":false}],"monthly":[{"month":"2025-07","n":4900,"mean":-12.31,"total":-60310.0,"cum":-60310.0,"pct":3.7},{"month":"2025-08","n":3878,"mean":-22.42,"total":-86950.0,"cum":-147260.0,"pct":5.4},{"month":"2025-09","n":3480,"mean":-34.83,"total":-121195.0,"cum":-268455.0,"pct":7.5},{"month":"2025-10","n":4216,"mean":-20.24,"total":-85342.5,"cum":-353797.5,"pct":5.3},{"month":"2025-11","n":3617,"mean":-9.57,"total":-34612.5,"cum":-388410.0,"pct":2.1},{"month":"2025-12","n":5014,"mean":-24.57,"total":-123175.0,"cum":-511585.0,"pct":7.6},{"month":"2026-01","n":4837,"mean":5.76,"total":27850.0,"cum":-483735.0,"pct":-1.7},{"month":"2026-02","n":5376,"mean":-32.98,"total":-177277.5,"cum":-661012.5,"pct":10.9},{"month":"2026-03","n":6715,"mean":-42.28,"total":-283932.51,"cum":-944945.01,"pct":17.5},{"month":"2026-04","n":5627,"mean":-33.76,"total":-189992.5,"cum":-1134937.51,"pct":11.7},{"month":"2026-05","n":4708,"mean":-60.31,"total":-283937.5,"cum":-1418875.01,"pct":17.5},{"month":"2026-06","n":2890,"mean":-55.18,"total":-159477.5,"cum":-1578352.51,"pct":9.8},{"month":"2026-07","n":4552,"mean":-10.14,"total":-46177.5,"cum":-1624530.01,"pct":2.8}],"summary":{"n":59810,"mean":-27.16,"t":-10.852,"bon_p":1,"total":-1624530.01,"win_rate":53.0,"pos_months":1,"neg_months":12}},"macro":{"slots":[{"n":204,"mean":-133.33,"t":-4.451,"bon_p":1,"total":-27200.0,"win_rate":42.2,"pos_months":0,"neg_months":13,"slot_id":180,"symbol":"CL","day":"Thu","bucket":"20:00","is_fdax":false},{"n":1311,"mean":45.06,"t":2.462,"bon_p":0.1463,"total":59069.99,"win_rate":64.8,"pos_months":3,"neg_months":9,"slot_id":223,"symbol":"CL","day":"Sun","bucket":"18:00","is_fdax":false},{"n":6141,"mean":-26.95,"t":-7.062,"bon_p":1,"total":-165475.0,"win_rate":40.4,"pos_months":2,"neg_months":11,"slot_id":259,"symbol":"ES","day":"Mon","bucket":"12:00","is_fdax":false},{"n":5867,"mean":-41.58,"t":-10.694,"bon_p":1,"total":-243937.5,"win_rate":38.6,"pos_months":1,"neg_months":12,"slot_id":260,"symbol":"ES","day":"Mon","bucket":"12:30","is_fdax":false},{"n":572,"mean":-14.64,"t":-0.912,"bon_p":1,"total":-8375.0,"win_rate":44.9,"pos_months":5,"neg_months":8,"slot_id":282,"symbol":"ES","day":"Tue","bucket":"00:00","is_fdax":false},{"n":5159,"mean":-40.22,"t":-8.488,"bon_p":1,"total":-207487.5,"win_rate":38.3,"pos_months":2,"neg_months":11,"slot_id":357,"symbol":"ES","day":"Wed","bucket":"14:00","is_fdax":false},{"n":5294,"mean":-19.84,"t":-4.485,"bon_p":1,"total":-105012.5,"win_rate":43.4,"pos_months":2,"neg_months":11,"slot_id":358,"symbol":"ES","day":"Wed","bucket":"14:30","is_fdax":false},{"n":219,"mean":-56.05,"t":-0.403,"bon_p":1,"total":-12275.0,"win_rate":50.7,"pos_months":3,"neg_months":10,"slot_id":587,"symbol":"FDAX","day":"Wed","bucket":"13:30","is_fdax":true},{"n":43,"mean":-415.7,"t":-2.107,"bon_p":1,"total":-17875.0,"win_rate":53.5,"pos_months":4,"neg_months":6,"slot_id":648,"symbol":"FDAX","day":"Thu","bucket":"23:00","is_fdax":true},{"n":392,"mean":-422.96,"t":-3.339,"bon_p":1,"total":-165800.0,"win_rate":52.3,"pos_months":4,"neg_months":9,"slot_id":675,"symbol":"FDAX","day":"Fri","bucket":"12:30","is_fdax":true},{"n":260,"mean":-97.21,"t":-0.881,"bon_p":1,"total":-25275.0,"win_rate":57.7,"pos_months":7,"neg_months":6,"slot_id":677,"symbol":"FDAX","day":"Fri","bucket":"13:30","is_fdax":true},{"n":4299,"mean":-33.88,"t":-3.721,"bon_p":1,"total":-145665.0,"win_rate":62.7,"pos_months":4,"neg_months":9,"slot_id":712,"symbol":"NQ","day":"Mon","bucket":"09:30","is_fdax":false},{"n":2476,"mean":-17.51,"t":-1.45,"bon_p":1,"total":-43345.0,"win_rate":62.9,"pos_months":3,"neg_months":10,"slot_id":714,"symbol":"NQ","day":"Mon","bucket":"10:30","is_fdax":false},{"n":1941,"mean":-81.37,"t":-6.169,"bon_p":1,"total":-157940.0,"win_rate":60.9,"pos_months":3,"neg_months":10,"slot_id":715,"symbol":"NQ","day":"Mon","bucket":"11:00","is_fdax":false},{"n":1688,"mean":-67.73,"t":-4.838,"bon_p":1,"total":-114325.0,"win_rate":61.2,"pos_months":1,"neg_months":12,"slot_id":716,"symbol":"NQ","day":"Mon","bucket":"11:30","is_fdax":false},{"n":1681,"mean":-12.05,"t":-0.839,"bon_p":1,"total":-20260.0,"win_rate":67.9,"pos_months":4,"neg_months":9,"slot_id":718,"symbol":"NQ","day":"Mon","bucket":"12:30","is_fdax":false},{"n":1463,"mean":-8.08,"t":-0.646,"bon_p":1,"total":-11815.0,"win_rate":67.1,"pos_months":5,"neg_months":8,"slot_id":719,"symbol":"NQ","day":"Mon","bucket":"13:00","is_fdax":false},{"n":5424,"mean":-15.32,"t":-1.417,"bon_p":1,"total":-83095.0,"win_rate":64.7,"pos_months":5,"neg_months":8,"slot_id":854,"symbol":"NQ","day":"Thu","bucket":"09:30","is_fdax":false},{"n":1925,"mean":23.01,"t":1.448,"bon_p":1,"total":44300.0,"win_rate":68.0,"pos_months":8,"neg_months":5,"slot_id":863,"symbol":"NQ","day":"Thu","bucket":"14:00","is_fdax":false},{"n":4967,"mean":-6.27,"t":-0.47,"bon_p":1,"total":-31150.0,"win_rate":63.9,"pos_months":4,"neg_months":9,"slot_id":901,"symbol":"NQ","day":"Fri","bucket":"09:30","is_fdax":false},{"n":1851,"mean":-36.71,"t":-2.888,"bon_p":1,"total":-67945.0,"win_rate":63.4,"pos_months":3,"neg_months":10,"slot_id":906,"symbol":"NQ","day":"Fri","bucket":"12:00","is_fdax":false}],"monthly":[{"month":"2025-07","n":3908,"mean":-17.1,"total":-66832.5,"cum":-66832.5,"pct":4.3},{"month":"2025-08","n":3842,"mean":-27.68,"total":-106335.0,"cum":-173167.5,"pct":6.9},{"month":"2025-09","n":2503,"mean":-56.62,"total":-141712.5,"cum":-314880.0,"pct":9.1},{"month":"2025-10","n":2934,"mean":-16.74,"total":-49105.0,"cum":-363985.0,"pct":3.2},{"month":"2025-11","n":3548,"mean":-8.02,"total":-28472.5,"cum":-392457.5,"pct":1.8},{"month":"2025-12","n":3957,"mean":-18.51,"total":-73225.0,"cum":-465682.5,"pct":4.7},{"month":"2026-01","n":4166,"mean":12.5,"total":52077.5,"cum":-413605.0,"pct":-3.4},{"month":"2026-02","n":5344,"mean":-33.48,"total":-178937.5,"cum":-592542.5,"pct":11.5},{"month":"2026-03","n":5858,"mean":-49.42,"total":-289502.51,"cum":-882045.01,"pct":18.7},{"month":"2026-04","n":5168,"mean":-36.9,"total":-190705.0,"cum":-1072750.01,"pct":12.3},{"month":"2026-05","n":4654,"mean":-61.83,"total":-287772.5,"cum":-1360522.51,"pct":18.6},{"month":"2026-06","n":2743,"mean":-52.56,"total":-144182.5,"cum":-1504705.01,"pct":9.3},{"month":"2026-07","n":4552,"mean":-10.14,"total":-46177.5,"cum":-1550882.51,"pct":3.0}],"summary":{"n":53177,"mean":-29.16,"t":-10.66,"bon_p":1,"total":-1550882.51,"win_rate":53.5,"pos_months":1,"neg_months":12}},"vix":{"slots":[{"n":108,"mean":-152.5,"t":-4.384,"bon_p":1,"total":-16470.0,"win_rate":36.1,"pos_months":0,"neg_months":12,"slot_id":180,"symbol":"CL","day":"Thu","bucket":"20:00","is_fdax":false},{"n":0,"mean":null,"t":null,"bon_p":null,"total":0,"win_rate":null,"pos_months":0,"neg_months":0,"slot_id":223,"symbol":"CL","day":"Sun","bucket":"18:00","is_fdax":false},{"n":4776,"mean":-30.3,"t":-7.667,"bon_p":1,"total":-144712.5,"win_rate":39.6,"pos_months":1,"neg_months":12,"slot_id":259,"symbol":"ES","day":"Mon","bucket":"12:00","is_fdax":false},{"n":4733,"mean":-39.35,"t":-9.754,"bon_p":1,"total":-186225.0,"win_rate":37.4,"pos_months":1,"neg_months":12,"slot_id":260,"symbol":"ES","day":"Mon","bucket":"12:30","is_fdax":false},{"n":383,"mean":-17.2,"t":-1.035,"bon_p":1,"total":-6587.5,"win_rate":42.6,"pos_months":4,"neg_months":8,"slot_id":282,"symbol":"ES","day":"Tue","bucket":"00:00","is_fdax":false},{"n":5267,"mean":-41.26,"t":-9.663,"bon_p":1,"total":-217312.5,"win_rate":39.4,"pos_months":1,"neg_months":11,"slot_id":357,"symbol":"ES","day":"Wed","bucket":"14:00","is_fdax":false},{"n":6121,"mean":-22.21,"t":-5.329,"bon_p":1,"total":-135950.0,"win_rate":43.4,"pos_months":2,"neg_months":10,"slot_id":358,"symbol":"ES","day":"Wed","bucket":"14:30","is_fdax":false},{"n":121,"mean":-266.94,"t":-2.259,"bon_p":1,"total":-32300.0,"win_rate":47.1,"pos_months":2,"neg_months":10,"slot_id":587,"symbol":"FDAX","day":"Wed","bucket":"13:30","is_fdax":true},{"n":36,"mean":-540.97,"t":-2.365,"bon_p":1,"total":-19475.0,"win_rate":50.0,"pos_months":2,"neg_months":5,"slot_id":648,"symbol":"FDAX","day":"Thu","bucket":"23:00","is_fdax":true},{"n":199,"mean":-18.22,"t":-0.159,"bon_p":1,"total":-3625.0,"win_rate":64.3,"pos_months":3,"neg_months":8,"slot_id":675,"symbol":"FDAX","day":"Fri","bucket":"12:30","is_fdax":true},{"n":179,"mean":-33.52,"t":-0.274,"bon_p":1,"total":-6000.0,"win_rate":64.8,"pos_months":5,"neg_months":5,"slot_id":677,"symbol":"FDAX","day":"Fri","bucket":"13:30","is_fdax":true},{"n":3849,"mean":-51.02,"t":-5.193,"bon_p":1,"total":-196360.0,"win_rate":60.9,"pos_months":2,"neg_months":11,"slot_id":712,"symbol":"NQ","day":"Mon","bucket":"09:30","is_fdax":false},{"n":1967,"mean":-19.81,"t":-1.386,"bon_p":1,"total":-38965.0,"win_rate":62.7,"pos_months":3,"neg_months":10,"slot_id":714,"symbol":"NQ","day":"Mon","bucket":"10:30","is_fdax":false},{"n":1595,"mean":-94.26,"t":-6.301,"bon_p":1,"total":-150350.0,"win_rate":59.6,"pos_months":2,"neg_months":11,"slot_id":715,"symbol":"NQ","day":"Mon","bucket":"11:00","is_fdax":false},{"n":1318,"mean":-81.01,"t":-5.075,"bon_p":1,"total":-106765.0,"win_rate":61.1,"pos_months":0,"neg_months":13,"slot_id":716,"symbol":"NQ","day":"Mon","bucket":"11:30","is_fdax":false},{"n":1411,"mean":-12.79,"t":-0.788,"bon_p":1,"total":-18050.0,"win_rate":67.9,"pos_months":4,"neg_months":9,"slot_id":718,"symbol":"NQ","day":"Mon","bucket":"12:30","is_fdax":false},{"n":1117,"mean":-15.13,"t":-1.086,"bon_p":1,"total":-16905.0,"win_rate":67.1,"pos_months":6,"neg_months":7,"slot_id":719,"symbol":"NQ","day":"Mon","bucket":"13:00","is_fdax":false},{"n":4933,"mean":-14.72,"t":-1.289,"bon_p":1,"total":-72615.0,"win_rate":64.0,"pos_months":6,"neg_months":6,"slot_id":854,"symbol":"NQ","day":"Thu","bucket":"09:30","is_fdax":false},{"n":1716,"mean":12.59,"t":0.881,"bon_p":1,"total":21605.0,"win_rate":68.3,"pos_months":7,"neg_months":5,"slot_id":863,"symbol":"NQ","day":"Thu","bucket":"14:00","is_fdax":false},{"n":3771,"mean":22.07,"t":1.431,"bon_p":1,"total":83235.0,"win_rate":64.7,"pos_months":5,"neg_months":7,"slot_id":901,"symbol":"NQ","day":"Fri","bucket":"09:30","is_fdax":false},{"n":1496,"mean":-42.92,"t":-3.252,"bon_p":1,"total":-64205.0,"win_rate":62.4,"pos_months":3,"neg_months":9,"slot_id":906,"symbol":"NQ","day":"Fri","bucket":"12:00","is_fdax":false}],"monthly":[{"month":"2025-07","n":4838,"mean":-12.4,"total":-59995.0,"cum":-59995.0,"pct":4.5},{"month":"2025-08","n":3267,"mean":-15.72,"total":-51352.5,"cum":-111347.5,"pct":3.9},{"month":"2025-09","n":3408,"mean":-36.04,"total":-122827.5,"cum":-234175.0,"pct":9.2},{"month":"2025-10","n":2950,"mean":-17.62,"total":-51967.5,"cum":-286142.5,"pct":3.9},{"month":"2025-11","n":2497,"mean":-19.92,"total":-49750.0,"cum":-335892.5,"pct":3.7},{"month":"2025-12","n":5003,"mean":-24.28,"total":-121485.0,"cum":-457377.5,"pct":9.1},{"month":"2026-01","n":3605,"mean":-15.33,"total":-55247.5,"cum":-512625.0,"pct":4.2},{"month":"2026-02","n":3069,"mean":-32.76,"total":-100545.0,"cum":-613170.0,"pct":7.6},{"month":"2026-03","n":780,"mean":-114.83,"total":-89567.5,"cum":-702737.5,"pct":6.7},{"month":"2026-04","n":3779,"mean":-43.93,"total":-165997.5,"cum":-868735.0,"pct":12.5},{"month":"2026-05","n":4536,"mean":-57.7,"total":-261707.5,"cum":-1130442.5,"pct":19.7},{"month":"2026-06","n":2865,"mean":-55.59,"total":-159277.5,"cum":-1289720.0,"pct":12.0},{"month":"2026-07","n":4499,"mean":-8.52,"total":-38312.5,"cum":-1328032.5,"pct":2.9}],"summary":{"n":45096,"mean":-29.45,"t":-10.92,"bon_p":1,"total":-1328032.5,"win_rate":52.5,"pos_months":0,"neg_months":13}},"vwap":{"slots":[{"n":88,"mean":-226.82,"t":-5.535,"bon_p":1,"total":-19960.0,"win_rate":29.5,"pos_months":0,"neg_months":12,"slot_id":180,"symbol":"CL","day":"Thu","bucket":"20:00","is_fdax":false},{"n":0,"mean":null,"t":null,"bon_p":null,"total":0,"win_rate":null,"pos_months":0,"neg_months":0,"slot_id":223,"symbol":"CL","day":"Sun","bucket":"18:00","is_fdax":false},{"n":2831,"mean":-6.65,"t":-1.121,"bon_p":1,"total":-18825.0,"win_rate":44.4,"pos_months":4,"neg_months":9,"slot_id":259,"symbol":"ES","day":"Mon","bucket":"12:00","is_fdax":false},{"n":2586,"mean":-32.6,"t":-5.454,"bon_p":1,"total":-84312.5,"win_rate":39.4,"pos_months":4,"neg_months":9,"slot_id":260,"symbol":"ES","day":"Mon","bucket":"12:30","is_fdax":false},{"n":254,"mean":2.02,"t":0.082,"bon_p":1,"total":512.5,"win_rate":48.8,"pos_months":6,"neg_months":7,"slot_id":282,"symbol":"ES","day":"Tue","bucket":"00:00","is_fdax":false},{"n":4023,"mean":-26.93,"t":-4.355,"bon_p":1,"total":-108337.5,"win_rate":42.1,"pos_months":3,"neg_months":10,"slot_id":357,"symbol":"ES","day":"Wed","bucket":"14:00","is_fdax":false},{"n":4791,"mean":1.07,"t":0.203,"bon_p":1,"total":5125.0,"win_rate":48.3,"pos_months":5,"neg_months":8,"slot_id":358,"symbol":"ES","day":"Wed","bucket":"14:30","is_fdax":false},{"n":2459,"mean":-79.32,"t":-6.441,"bon_p":1,"total":-195045.0,"win_rate":62.3,"pos_months":2,"neg_months":11,"slot_id":712,"symbol":"NQ","day":"Mon","bucket":"09:30","is_fdax":false},{"n":1173,"mean":-36.35,"t":-2.246,"bon_p":1,"total":-42640.0,"win_rate":62.9,"pos_months":3,"neg_months":10,"slot_id":714,"symbol":"NQ","day":"Mon","bucket":"10:30","is_fdax":false},{"n":887,"mean":-88.33,"t":-4.433,"bon_p":1,"total":-78350.0,"win_rate":59.2,"pos_months":4,"neg_months":9,"slot_id":715,"symbol":"NQ","day":"Mon","bucket":"11:00","is_fdax":false},{"n":768,"mean":-54.11,"t":-2.696,"bon_p":1,"total":-41560.0,"win_rate":63.8,"pos_months":3,"neg_months":10,"slot_id":716,"symbol":"NQ","day":"Mon","bucket":"11:30","is_fdax":false},{"n":762,"mean":-9.67,"t":-0.453,"bon_p":1,"total":-7365.0,"win_rate":69.8,"pos_months":5,"neg_months":8,"slot_id":718,"symbol":"NQ","day":"Mon","bucket":"12:30","is_fdax":false},{"n":651,"mean":-35.22,"t":-1.875,"bon_p":1,"total":-22925.0,"win_rate":65.4,"pos_months":4,"neg_months":9,"slot_id":719,"symbol":"NQ","day":"Mon","bucket":"13:00","is_fdax":false},{"n":2949,"mean":-19.06,"t":-1.091,"bon_p":1,"total":-56205.0,"win_rate":64.4,"pos_months":5,"neg_months":8,"slot_id":854,"symbol":"NQ","day":"Thu","bucket":"09:30","is_fdax":false},{"n":1016,"mean":-0.75,"t":-0.03,"bon_p":1,"total":-760.0,"win_rate":66.7,"pos_months":7,"neg_months":6,"slot_id":863,"symbol":"NQ","day":"Thu","bucket":"14:00","is_fdax":false},{"n":2620,"mean":-10.05,"t":-0.627,"bon_p":1,"total":-26330.0,"win_rate":68.2,"pos_months":6,"neg_months":7,"slot_id":901,"symbol":"NQ","day":"Fri","bucket":"09:30","is_fdax":false},{"n":990,"mean":-28.65,"t":-1.713,"bon_p":1,"total":-28360.0,"win_rate":64.2,"pos_months":6,"neg_months":7,"slot_id":906,"symbol":"NQ","day":"Fri","bucket":"12:00","is_fdax":false}],"monthly":[{"month":"2025-07","n":2050,"mean":8.04,"total":16475.0,"cum":16475.0,"pct":-2.3},{"month":"2025-08","n":2145,"mean":-17.79,"total":-38165.0,"cum":-21690.0,"pct":5.3},{"month":"2025-09","n":1622,"mean":-59.46,"total":-96445.0,"cum":-118135.0,"pct":13.3},{"month":"2025-10","n":2254,"mean":-23.85,"total":-53765.0,"cum":-171900.0,"pct":7.4},{"month":"2025-11","n":1813,"mean":14.53,"total":26337.5,"cum":-145562.5,"pct":-3.6},{"month":"2025-12","n":2304,"mean":-12.1,"total":-27880.0,"cum":-173442.5,"pct":3.8},{"month":"2026-01","n":2593,"mean":17.43,"total":45197.5,"cum":-128245.0,"pct":-6.2},{"month":"2026-02","n":2449,"mean":-56.59,"total":-138580.0,"cum":-266825.0,"pct":19.1},{"month":"2026-03","n":3057,"mean":-13.07,"total":-39950.0,"cum":-306775.0,"pct":5.5},{"month":"2026-04","n":2481,"mean":-78.28,"total":-194215.0,"cum":-500990.0,"pct":26.8},{"month":"2026-05","n":2357,"mean":-75.98,"total":-179087.5,"cum":-680077.5,"pct":24.7},{"month":"2026-06","n":1497,"mean":-25.27,"total":-37832.5,"cum":-717910.0,"pct":5.2},{"month":"2026-07","n":2226,"mean":-3.34,"total":-7427.5,"cum":-725337.5,"pct":1.0}],"summary":{"n":28848,"mean":-25.14,"t":-7.472,"bon_p":1,"total":-725337.5,"win_rate":54.4,"pos_months":3,"neg_months":10}},"combo":{"slots":[{"n":59,"mean":-177.12,"t":-3.934,"bon_p":1,"total":-10450.0,"win_rate":33.9,"pos_months":0,"neg_months":11,"slot_id":180,"symbol":"CL","day":"Thu","bucket":"20:00","is_fdax":false},{"n":0,"mean":null,"t":null,"bon_p":null,"total":0,"win_rate":null,"pos_months":0,"neg_months":0,"slot_id":223,"symbol":"CL","day":"Sun","bucket":"18:00","is_fdax":false},{"n":2195,"mean":-14.16,"t":-2.32,"bon_p":1,"total":-31087.5,"win_rate":44.4,"pos_months":4,"neg_months":9,"slot_id":259,"symbol":"ES","day":"Mon","bucket":"12:00","is_fdax":false},{"n":2100,"mean":-39.15,"t":-6.477,"bon_p":1,"total":-82212.5,"win_rate":37.5,"pos_months":3,"neg_months":10,"slot_id":260,"symbol":"ES","day":"Mon","bucket":"12:30","is_fdax":false},{"n":162,"mean":30.02,"t":1.24,"bon_p":1,"total":4862.5,"win_rate":53.7,"pos_months":7,"neg_months":5,"slot_id":282,"symbol":"ES","day":"Tue","bucket":"00:00","is_fdax":false},{"n":1573,"mean":-52.51,"t":-7.032,"bon_p":1,"total":-82600.0,"win_rate":37.0,"pos_months":2,"neg_months":10,"slot_id":357,"symbol":"ES","day":"Wed","bucket":"14:00","is_fdax":false},{"n":1378,"mean":-18.84,"t":-2.539,"bon_p":1,"total":-25962.5,"win_rate":45.4,"pos_months":4,"neg_months":8,"slot_id":358,"symbol":"ES","day":"Wed","bucket":"14:30","is_fdax":false},{"n":1563,"mean":-105.15,"t":-6.615,"bon_p":1,"total":-164350.0,"win_rate":59.8,"pos_months":2,"neg_months":10,"slot_id":712,"symbol":"NQ","day":"Mon","bucket":"09:30","is_fdax":false},{"n":944,"mean":-45.52,"t":-2.414,"bon_p":1,"total":-42975.0,"win_rate":62.3,"pos_months":4,"neg_months":9,"slot_id":714,"symbol":"NQ","day":"Mon","bucket":"10:30","is_fdax":false},{"n":734,"mean":-111.61,"t":-4.957,"bon_p":1,"total":-81920.0,"win_rate":56.8,"pos_months":2,"neg_months":11,"slot_id":715,"symbol":"NQ","day":"Mon","bucket":"11:00","is_fdax":false},{"n":633,"mean":-46.5,"t":-2.111,"bon_p":1,"total":-29435.0,"win_rate":64.1,"pos_months":3,"neg_months":10,"slot_id":716,"symbol":"NQ","day":"Mon","bucket":"11:30","is_fdax":false},{"n":649,"mean":-22.16,"t":-0.924,"bon_p":1,"total":-14385.0,"win_rate":69.0,"pos_months":4,"neg_months":9,"slot_id":718,"symbol":"NQ","day":"Mon","bucket":"12:30","is_fdax":false},{"n":507,"mean":-30.11,"t":-1.525,"bon_p":1,"total":-15265.0,"win_rate":66.1,"pos_months":4,"neg_months":9,"slot_id":719,"symbol":"NQ","day":"Mon","bucket":"13:00","is_fdax":false},{"n":2565,"mean":-9.57,"t":-0.493,"bon_p":1,"total":-24540.0,"win_rate":64.6,"pos_months":5,"neg_months":7,"slot_id":854,"symbol":"NQ","day":"Thu","bucket":"09:30","is_fdax":false},{"n":866,"mean":-27.6,"t":-1.34,"bon_p":1,"total":-23905.0,"win_rate":67.2,"pos_months":6,"neg_months":6,"slot_id":863,"symbol":"NQ","day":"Thu","bucket":"14:00","is_fdax":false},{"n":1873,"mean":5.72,"t":0.387,"bon_p":1,"total":10705.0,"win_rate":69.6,"pos_months":6,"neg_months":5,"slot_id":901,"symbol":"NQ","day":"Fri","bucket":"09:30","is_fdax":false},{"n":818,"mean":-25.37,"t":-1.442,"bon_p":1,"total":-20755.0,"win_rate":63.7,"pos_months":5,"neg_months":6,"slot_id":906,"symbol":"NQ","day":"Fri","bucket":"12:00","is_fdax":false}],"monthly":[{"month":"2025-07","n":1679,"mean":5.39,"total":9050.0,"cum":9050.0,"pct":-1.4},{"month":"2025-08","n":1707,"mean":-28.56,"total":-48747.5,"cum":-39697.5,"pct":7.7},{"month":"2025-09","n":1090,"mean":-63.7,"total":-69430.0,"cum":-109127.5,"pct":10.9},{"month":"2025-10","n":882,"mean":-20.18,"total":-17802.5,"cum":-126930.0,"pct":2.8},{"month":"2025-11","n":1117,"mean":-6.46,"total":-7220.0,"cum":-134150.0,"pct":1.1},{"month":"2025-12","n":1755,"mean":-16.12,"total":-28292.5,"cum":-162442.5,"pct":4.5},{"month":"2026-01","n":1450,"mean":-34.03,"total":-49342.5,"cum":-211785.0,"pct":7.8},{"month":"2026-02","n":1391,"mean":-53.06,"total":-73812.5,"cum":-285597.5,"pct":11.6},{"month":"2026-03","n":154,"mean":-103.47,"total":-15935.0,"cum":-301532.5,"pct":2.5},{"month":"2026-04","n":1468,"mean":-69.72,"total":-102350.0,"cum":-403882.5,"pct":16.1},{"month":"2026-05","n":2308,"mean":-81.11,"total":-187192.5,"cum":-591075.0,"pct":29.5},{"month":"2026-06","n":1392,"mean":-25.7,"total":-35772.5,"cum":-626847.5,"pct":5.6},{"month":"2026-07","n":2226,"mean":-3.34,"total":-7427.5,"cum":-634275.0,"pct":1.2}],"summary":{"n":18619,"mean":-34.07,"t":-8.096,"bon_p":1,"total":-634275.0,"win_rate":55.2,"pos_months":1,"neg_months":12}},"bootstrap":{"unfiltered":{"n_trades":59810,"n_dates":273,"actual_mean":-27.16,"boot_mean":-27.2,"p5":-36.29,"p25":-30.95,"median":-27.19,"p75":-23.47,"p95":-18.02,"p_negative":1.0},"macro":{"n_trades":53177,"n_dates":265,"actual_mean":-29.16,"boot_mean":-29.28,"p5":-39.18,"p25":-33.41,"median":-29.43,"p75":-25.31,"p95":-18.82,"p_negative":1.0},"vix":{"n_trades":45096,"n_dates":186,"actual_mean":-29.45,"boot_mean":-29.41,"p5":-38.73,"p25":-33.35,"median":-29.48,"p75":-25.62,"p95":-19.84,"p_negative":1.0},"vwap":{"n_trades":28848,"n_dates":216,"actual_mean":-25.14,"boot_mean":-25.28,"p5":-39.91,"p25":-31.3,"median":-25.29,"p75":-19.16,"p95":-10.88,"p_negative":0.9968},"combo":{"n_trades":18619,"n_dates":null,"actual_mean":-34.07,"boot_mean":null,"p5":null,"p25":null,"median":null,"p75":null,"p95":null,"p_negative":null}}};
+
+const SC_META = {
+  unfiltered:{label:'Unfiltered Baseline',short:'Baseline',cls:'c-base',color:'rgba(71,85,105,0.85)',fill:'rgba(71,85,105,0.25)'},
+  macro:      {label:'A — Macro Blackout', short:'Macro',   cls:'c-macro',color:'rgba(245,158,11,0.85)',fill:'rgba(245,158,11,0.2)'},
+  vix:        {label:'B — VIX Regime',     short:'VIX',     cls:'c-vix',  color:'rgba(139,92,246,0.85)',fill:'rgba(139,92,246,0.2)'},
+  vwap:       {label:'C — VWAP Dir.',      short:'VWAP',    cls:'c-vwap', color:'rgba(59,130,246,0.85)', fill:'rgba(59,130,246,0.2)'},
+  combo:      {label:'All 3 Combined',     short:'Combo',   cls:'c-combo',color:'rgba(232,121,249,0.85)',fill:'rgba(232,121,249,0.15)'},
 };
-const monthMean = {
-  unfiltered:[-12.31,-22.42,-34.83,-20.24,-9.57,-24.57,5.76,-32.98,-42.28,-33.76,-60.31,-55.18,-10.14],
-  macro:     [-17.10,-27.68,-56.62,-16.74,-8.02,-18.51,12.50,-33.48,-49.42,-36.90,-61.83,-52.56,-10.14],
-  vix:       [-12.40,-15.72,-36.04,-17.62,-19.92,-24.28,-15.33,-32.76,-114.83,-43.93,-57.70,-55.59,-8.52],
-  vwap:      [8.04,-17.79,-59.46,-23.85,14.53,-12.10,17.43,-56.59,-13.07,-78.28,-75.98,-25.27,-3.34],
-};
-const bootData=[
-  {label:'Unfiltered', p5:-36.29,p25:-30.95,median:-27.19,p75:-23.47,p95:-18.02,actual:-27.16,pneg:1.0},
-  {label:'Macro alone',p5:-39.18,p25:-33.41,median:-29.43,p75:-25.31,p95:-18.82,actual:-29.16,pneg:1.0},
-  {label:'VIX alone',  p5:-38.73,p25:-33.35,median:-29.48,p75:-25.62,p95:-19.84,actual:-29.45,pneg:1.0},
-  {label:'VWAP alone', p5:-39.91,p25:-31.30,median:-25.29,p75:-19.16,p95:-10.88,actual:-25.14,pneg:0.9968},
-];
-const slotData=[
-  {id:180,sym:'CL',day:'Thu',bkt:'20:00',ut:-4.451,um:-133.33,ct:-3.934,cm:-177.12,rem:71,dir:'WORSENED'},
-  {id:259,sym:'ES',day:'Mon',bkt:'12:00',ut:-7.062,um:-26.95,ct:-2.320,cm:-14.16,rem:64,dir:'IMPROVED'},
-  {id:260,sym:'ES',day:'Mon',bkt:'12:30',ut:-10.694,um:-41.58,ct:-6.477,cm:-39.15,rem:64,dir:'IMPROVED'},
-  {id:282,sym:'ES',day:'Tue',bkt:'00:00',ut:-0.912,um:-14.64,ct:1.240,cm:30.02,rem:72,dir:'IMPROVED'},
-  {id:357,sym:'ES',day:'Wed',bkt:'14:00',ut:-7.478,um:-30.14,ct:-7.032,cm:-52.51,rem:79,dir:'WORSENED'},
-  {id:358,sym:'ES',day:'Wed',bkt:'14:30',ut:-3.449,um:-12.75,ct:-2.539,cm:-18.84,rem:84,dir:'WORSENED'},
-  {id:712,sym:'NQ',day:'Mon',bkt:'09:30',ut:-5.061,um:-42.86,ct:-6.615,cm:-105.15,rem:68,dir:'WORSENED'},
-  {id:714,sym:'NQ',day:'Mon',bkt:'10:30',ut:-1.450,um:-17.51,ct:-2.414,cm:-45.52,rem:62,dir:'WORSENED'},
-  {id:715,sym:'NQ',day:'Mon',bkt:'11:00',ut:-6.169,um:-81.37,ct:-4.957,cm:-111.61,rem:62,dir:'WORSENED'},
-  {id:716,sym:'NQ',day:'Mon',bkt:'11:30',ut:-4.838,um:-67.73,ct:-2.111,cm:-46.50,rem:62,dir:'IMPROVED'},
-  {id:718,sym:'NQ',day:'Mon',bkt:'12:30',ut:-0.839,um:-12.05,ct:-0.924,cm:-22.16,rem:61,dir:'WORSENED'},
-  {id:719,sym:'NQ',day:'Mon',bkt:'13:00',ut:-0.646,um:-8.08,ct:-1.525,cm:-30.11,rem:65,dir:'WORSENED'},
-  {id:854,sym:'NQ',day:'Thu',bkt:'09:30',ut:-1.409,um:-14.90,ct:-0.493,cm:-9.57,rem:54,dir:'IMPROVED'},
-  {id:863,sym:'NQ',day:'Thu',bkt:'14:00',ut:1.448,um:23.01,ct:-1.340,cm:-27.60,rem:55,dir:'WORSENED'},
-  {id:901,sym:'NQ',day:'Fri',bkt:'09:30',ut:-0.117,um:-1.57,ct:0.387,cm:5.72,rem:63,dir:'IMPROVED'},
-  {id:906,sym:'NQ',day:'Fri',bkt:'12:00',ut:-2.888,um:-36.71,ct:-1.442,cm:-25.37,rem:56,dir:'IMPROVED'},
-];
 
-// Slot table
-const tbody=document.getElementById('slotBody');
-slotData.forEach(s=>{
-  const tr=document.createElement('tr');
-  const imp=s.dir==='IMPROVED';
-  tr.innerHTML=`<td class="lbl">${s.id}</td><td class="lbl">${s.sym}</td><td class="lbl">${s.day}</td><td class="lbl">${s.bkt}</td>
-  <td class="num neg">${s.ut.toFixed(3)}</td><td class="num ${s.um>=0?'pos':'neg'}">$${s.um.toFixed(2)}</td>
-  <td class="num ${s.ct>=0?'pos':'neg'}">${s.ct.toFixed(3)}</td><td class="num ${s.cm>=0?'pos':'neg'}">$${s.cm.toFixed(2)}</td>
-  <td class="num">${s.rem}%</td><td><span class="${imp?'imp':'wor'}">${imp?'▲ IMPR':'▼ WORSE'}</span></td>`;
-  tbody.appendChild(tr);
-});
+const GRID  = {color:'rgba(255,255,255,0.04)'};
+const TICK  = {color:'#64748b',font:{family:'JetBrains Mono',size:10}};
+const MONTHS= ['2025-07','2025-08','2025-09','2025-10','2025-11','2025-12','2026-01','2026-02','2026-03','2026-04','2026-05','2026-06','2026-07'];
+const DAY_ORDER = {Mon:1,Tue:2,Wed:3,Thu:4,Fri:5,Sat:6,Sun:7};
 
-const grid={color:'rgba(255,255,255,0.04)'};
-const tick={color:'#64748b',font:{family:'JetBrains Mono',size:10}};
-const Cs=['rgba(100,116,139,0.8)','rgba(245,158,11,0.85)','rgba(139,92,246,0.85)','rgba(59,130,246,0.85)'];
+// ── Utilities ─────────────────────────────────────────────────────────────
+function fmt(v,dec=2){if(v==null)return '—';return (v>=0?'$':'−$')+Math.abs(v).toFixed(dec);}
+function fmtN(v){if(v==null)return '—';return v.toLocaleString();}
+function cls(v){return v==null?'neu':(v>=0?'pos':'neg');}
+function colored(v,dec=2){return `<span class="${cls(v)}">${fmt(v,dec)}</span>`;}
 
-// Bootstrap range chart
-new Chart(document.getElementById('bootChart'),{
-  type:'bar',
-  data:{labels:bootData.map(d=>d.label),datasets:[
-    {label:'P5→P95',data:bootData.map(d=>[d.p5,d.p95]),backgroundColor:Cs.map(c=>c.replace('0.8','0.2').replace('0.85','0.2')),borderColor:Cs,borderWidth:1.5,borderRadius:3},
-    {type:'scatter',label:'Actual mean',data:bootData.map((d,i)=>({x:bootData[i].label,y:d.actual})),backgroundColor:Cs,pointRadius:7,showLine:false}
-  ]},
-  options:{responsive:true,maintainAspectRatio:false,
-    plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: `+(Array.isArray(ctx.raw)?`$${ctx.raw[0].toFixed(2)} → $${ctx.raw[1].toFixed(2)}`:`$${ctx.raw.toFixed(2)}`)}}},
-    scales:{x:{ticks:{...tick,maxRotation:10},grid},y:{ticks:{...tick,callback:v=>'$'+v},grid}}}
-});
+// ── Nav panel switch ───────────────────────────────────────────────────────
+function showPanel(id,btn){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('panel-'+id).classList.add('active');
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+}
 
-// P(neg) bar chart
-new Chart(document.getElementById('pnegChart'),{
-  type:'bar',data:{labels:bootData.map(d=>d.label),datasets:[{label:'P(neg)',data:bootData.map(d=>d.pneg),backgroundColor:Cs.map(c=>c.replace('0.8','0.65').replace('0.85','0.65')),borderColor:Cs,borderWidth:1.5,borderRadius:4}]},
-  options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',
-    plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`P(neg)=${ctx.raw.toFixed(4)}`}}},
-    scales:{x:{min:0.9,max:1.01,ticks:{...tick,callback:v=>(v*100).toFixed(1)+'%'},grid},y:{ticks:tick,grid}}}
-});
-
-// Cumulative PnL
-new Chart(document.getElementById('wfChart'),{
-  type:'line',
-  data:{labels:months,datasets:[
-    {label:'Unfiltered',data:cumPnL.unfiltered,borderColor:'#64748b',backgroundColor:'transparent',borderWidth:1.5,pointRadius:3,tension:0.3},
-    {label:'Macro',data:cumPnL.macro,borderColor:'#f59e0b',backgroundColor:'transparent',borderWidth:1.5,pointRadius:3,tension:0.3},
-    {label:'VIX',data:cumPnL.vix,borderColor:'#8b5cf6',backgroundColor:'transparent',borderWidth:1.5,pointRadius:3,tension:0.3},
-    {label:'VWAP',data:cumPnL.vwap,borderColor:'#3b82f6',backgroundColor:'rgba(59,130,246,0.05)',borderWidth:2,pointRadius:3,tension:0.3,fill:true},
-  ]},
-  options:{responsive:true,maintainAspectRatio:false,
-    plugins:{legend:{labels:{color:'#94a3b8',font:{family:'Inter',size:12}}},tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: $${ctx.raw.toLocaleString()}`}}},
-    scales:{x:{ticks:tick,grid},y:{ticks:{...tick,callback:v=>'$'+(v/1000).toFixed(0)+'K'},grid,title:{display:true,text:'Cumulative PnL ($)',color:'#64748b',font:{size:11}}}}}
-});
-
-// Monthly mean bar
-const sKeys=['unfiltered','macro','vix','vwap'];
-const sLabels=['Unfiltered','Macro alone','VIX alone','VWAP alone'];
-let mChart=null;
-function buildM(idx){
-  const d=monthMean[sKeys[idx]];
-  const cols=d.map(v=>v>=0?'rgba(16,185,129,0.7)':'rgba(239,68,68,0.7)');
-  const bc=d.map(v=>v>=0?'rgba(16,185,129,1)':'rgba(239,68,68,1)');
-  if(mChart)mChart.destroy();
-  mChart=new Chart(document.getElementById('monthlyChart'),{
-    type:'bar',data:{labels:months,datasets:[{label:sLabels[idx]+' — Mean PnL/Trade',data:d,backgroundColor:cols,borderColor:bc,borderWidth:1,borderRadius:3}]},
-    options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{labels:{color:'#94a3b8',font:{size:12}}},tooltip:{callbacks:{label:ctx=>`$${ctx.raw.toFixed(2)}/trade`}}},
-      scales:{x:{ticks:tick,grid},y:{ticks:{...tick,callback:v=>'$'+v.toFixed(0)},grid,title:{display:true,text:'Mean PnL/Trade',color:'#64748b',font:{size:11}}}}}
+// ─────────────────────────────────────────────────────────────────────────
+// OVERVIEW
+// ─────────────────────────────────────────────────────────────────────────
+function buildOverviewCards(){
+  const el=document.getElementById('overview-cards');
+  Object.entries(SC_META).forEach(([key,m])=>{
+    const sc=key==='combo'?null:D.bootstrap[key];
+    const su=D[key].summary;
+    const div=document.createElement('div');
+    div.className=`card ${m.cls}`;
+    const pneg=sc?sc.p_negative:null;
+    const pill=pneg===null?'<span class="pill pill-warn">Combination — Gate Assessment</span>':
+      pneg>=0.9968?'<span class="pill pill-info">Bootstrap completed</span>':
+      '<span class="pill pill-ok">Below 95% confidence of negative</span>';
+    div.innerHTML=`
+      <div class="clabel">${m.label}</div>
+      <div class="cbig ${su.mean>=0?'pos':'neg'}">${fmt(su.mean)}</div>
+      <div class="csub">${fmtN(su.n)} trades${key==='vwap'||key==='combo'?' · 17 non-FDAX slots':' · 21 slots'}</div>
+      <div class="cmeta">
+        <div class="crow"><span>Total PnL</span><span class="${cls(su.total)}">${fmt(su.total,0)}</span></div>
+        <div class="crow"><span>Win Rate</span><span>${su.win_rate!=null?su.win_rate+'%':'—'}</span></div>
+        <div class="crow"><span>+Months / −Months</span><span>${su.pos_months} / ${su.neg_months}</span></div>
+        ${sc?`<div class="crow"><span>P(mean&lt;0)</span><span class="neg">${sc.p_negative.toFixed(4)}</span></div>`:''}
+        ${sc?`<div class="crow"><span>Boot P5/P95</span><span>${fmt(sc.p5)} / ${fmt(sc.p95)}</span></div>`:''}
+        ${!sc?`<div class="crow"><span>Step 4 gate</span><span class="warn" style="color:var(--warn)">Not satisfied</span></div>`:''}
+      </div>
+      ${pill}`;
+    el.appendChild(div);
   });
 }
-buildM(0);
-function showS(idx,btn){document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));btn.classList.add('active');buildM(idx);}
+
+function buildOvBootRange(){
+  const labels=['Baseline','Macro','VIX','VWAP'];
+  const keys=['unfiltered','macro','vix','vwap'];
+  const colors=keys.map(k=>SC_META[k].color);
+  const bs=keys.map(k=>D.bootstrap[k]);
+  new Chart(document.getElementById('ov-boot-range'),{
+    type:'bar',
+    data:{labels,datasets:[
+      {label:'P5→P95 range',data:bs.map(b=>[b.p5,b.p95]),
+       backgroundColor:keys.map(k=>SC_META[k].fill),borderColor:colors,borderWidth:1.5,borderRadius:3},
+      {type:'scatter',label:'Observed mean',data:labels.map((l,i)=>({x:l,y:bs[i].actual_mean})),
+       backgroundColor:colors,pointRadius:7,showLine:false}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#94a3b8',font:{size:11}}},
+        annotation:{annotations:{zero:{type:'line',yMin:0,yMax:0,borderColor:'rgba(255,255,255,0.15)',borderWidth:1,borderDash:[4,4]}}},
+        tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: `+(Array.isArray(ctx.raw)?`${fmt(ctx.raw[0])} → ${fmt(ctx.raw[1])}`:fmt(ctx.raw))}}},
+      scales:{x:{ticks:TICK,grid:GRID},y:{ticks:{...TICK,callback:v=>'$'+v},grid:GRID}}}
+  });
+}
+
+function buildOvPneg(){
+  const keys=['unfiltered','macro','vix','vwap'];
+  new Chart(document.getElementById('ov-pneg'),{
+    type:'bar',
+    data:{labels:keys.map(k=>SC_META[k].short),
+      datasets:[{label:'P(mean < 0)',data:keys.map(k=>D.bootstrap[k].p_negative),
+        backgroundColor:keys.map(k=>SC_META[k].fill.replace('0.25','0.6').replace('0.2','0.5')),
+        borderColor:keys.map(k=>SC_META[k].color),borderWidth:1.5,borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',
+      plugins:{legend:{display:false},
+        tooltip:{callbacks:{label:ctx=>`P(neg) = ${(ctx.raw*100).toFixed(2)}%`}}},
+      scales:{x:{min:0.85,max:1.01,ticks:{...TICK,callback:v=>(v*100).toFixed(1)+'%'},grid:GRID},y:{ticks:TICK,grid:GRID}}}
+  });
+}
+
+function buildOvCumWF(){
+  const keys=['unfiltered','macro','vix','vwap'];
+  const datasets=keys.map(k=>{
+    const mo=D[k].monthly;
+    const data=MONTHS.map(m=>{const r=mo.find(x=>x.month===m);return r?r.cum:null;});
+    return {label:SC_META[k].label,data,borderColor:SC_META[k].color,
+      backgroundColor:'transparent',borderWidth:1.5,pointRadius:3,tension:0.3};
+  });
+  new Chart(document.getElementById('ov-cumwf'),{
+    type:'line',data:{labels:MONTHS,datasets},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#94a3b8',font:{size:12}}},
+        tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: $${ctx.raw!=null?ctx.raw.toLocaleString():'—'}`}}},
+      scales:{x:{ticks:TICK,grid:GRID},
+        y:{ticks:{...TICK,callback:v=>'$'+(v/1000).toFixed(0)+'K'},grid:GRID,
+           title:{display:true,text:'Cumulative PnL ($)',color:'#64748b',font:{size:11}}}}}
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// MONTHLY DETAIL
+// ─────────────────────────────────────────────────────────────────────────
+let moBarChart=null,moCumChart=null,curMonthly='unfiltered';
+function showMonthly(key,btn){
+  curMonthly=key;
+  document.querySelectorAll('#panel-monthly .stab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  renderMonthly(key);
+}
+
+function renderMonthly(key){
+  const sc=D[key];const m=SC_META[key];const su=sc.summary;const mo=sc.monthly;
+  // Stat strip
+  const strip=document.getElementById('monthly-stat-strip');
+  strip.innerHTML=`
+    <div class="stat-box"><div class="lbl">Total Trades</div><div class="val">${fmtN(su.n)}</div></div>
+    <div class="stat-box"><div class="lbl">Mean PnL/Trade</div><div class="val ${cls(su.mean)}">${fmt(su.mean)}</div></div>
+    <div class="stat-box"><div class="lbl">Total PnL</div><div class="val ${cls(su.total)}">${fmt(su.total,0)}</div></div>
+    <div class="stat-box"><div class="lbl">Win Rate</div><div class="val">${su.win_rate!=null?su.win_rate+'%':'—'}</div></div>
+    <div class="stat-box"><div class="lbl">Positive Months</div><div class="val pos">${su.pos_months}</div></div>
+    <div class="stat-box"><div class="lbl">Negative Months</div><div class="val neg">${su.neg_months}</div></div>`;
+  // Table title
+  document.getElementById('monthly-tbl-title').textContent=m.label+' — Monthly Trade Data';
+  document.getElementById('monthly-tbl-sub').textContent=`${mo.length} months · ${fmtN(su.n)} total trades`;
+  // Table
+  const tb=document.getElementById('monthly-tbody');
+  tb.innerHTML=mo.map(r=>{
+    const pc=r.pct;const pcCls=pc>0?'neg':(pc<0?'pos':'neu');
+    return `<tr>
+      <td class="lbl">${r.month}</td>
+      <td class="r">${r.n.toLocaleString()}</td>
+      <td class="r ${cls(r.mean)}">${fmt(r.mean)}</td>
+      <td class="r ${cls(r.total)}">${fmt(r.total,0)}</td>
+      <td class="r ${cls(r.cum)}">${fmt(r.cum,0)}</td>
+      <td class="r"><span class="${pcCls}">${pc.toFixed(1)}%</span></td>
+    </tr>`;}).join('');
+  const totMean=mo.reduce((a,r)=>a+r.total,0)/Math.max(mo.reduce((a,r)=>a+r.n,0),1);
+  const totPnl=mo.reduce((a,r)=>a+r.total,0);
+  document.getElementById('monthly-tfoot').innerHTML=
+    `<tr><td class="lbl"><strong>Total</strong></td>
+     <td class="r"><strong>${fmtN(su.n)}</strong></td>
+     <td class="r ${cls(totMean)}"><strong>${fmt(totMean)}</strong></td>
+     <td class="r ${cls(totPnl)}"><strong>${fmt(totPnl,0)}</strong></td>
+     <td class="r"></td><td class="r"></td></tr>`;
+  // Charts
+  const barData=MONTHS.map(mn=>{const r=mo.find(x=>x.month===mn);return r?r.mean:null;});
+  const cumData=MONTHS.map(mn=>{const r=mo.find(x=>x.month===mn);return r?r.cum:null;});
+  const barCols=barData.map(v=>v==null?'transparent':v>=0?'rgba(16,185,129,0.7)':'rgba(239,68,68,0.7)');
+  const barBord=barData.map(v=>v==null?'transparent':v>=0?'rgba(16,185,129,1)':'rgba(239,68,68,1)');
+  if(moBarChart)moBarChart.destroy();
+  moBarChart=new Chart(document.getElementById('mo-bar'),{
+    type:'bar',data:{labels:MONTHS,datasets:[{label:'Mean PnL/Trade',data:barData,
+      backgroundColor:barCols,borderColor:barBord,borderWidth:1,borderRadius:3}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>fmt(ctx.raw)}}},
+      scales:{x:{ticks:TICK,grid:GRID},y:{ticks:{...TICK,callback:v=>'$'+v.toFixed(0)},grid:GRID}}}
+  });
+  if(moCumChart)moCumChart.destroy();
+  moCumChart=new Chart(document.getElementById('mo-cum'),{
+    type:'line',data:{labels:MONTHS,datasets:[{label:'Cumulative PnL',data:cumData,
+      borderColor:m.color,backgroundColor:m.fill,fill:true,borderWidth:2,pointRadius:4,tension:0.3}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.raw!=null?'$'+ctx.raw.toLocaleString():'—'}}},
+      scales:{x:{ticks:TICK,grid:GRID},y:{ticks:{...TICK,callback:v=>'$'+(v/1000).toFixed(0)+'K'},grid:GRID}}}
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// PER-SLOT DETAIL
+// ─────────────────────────────────────────────────────────────────────────
+let curSlot='unfiltered';
+function showSlots(key,btn){
+  curSlot=key;
+  document.querySelectorAll('#panel-perslot .stab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  renderSlots(key);
+}
+
+function renderSlots(key){
+  const sc=D[key];const m=SC_META[key];const su=sc.summary;
+  const strip=document.getElementById('slot-stat-strip');
+  strip.innerHTML=`
+    <div class="stat-box"><div class="lbl">Total Trades</div><div class="val">${fmtN(su.n)}</div></div>
+    <div class="stat-box"><div class="lbl">Mean PnL/Trade</div><div class="val ${cls(su.mean)}">${fmt(su.mean)}</div></div>
+    <div class="stat-box"><div class="lbl">Total PnL</div><div class="val ${cls(su.total)}">${fmt(su.total,0)}</div></div>
+    <div class="stat-box"><div class="lbl">Win Rate</div><div class="val">${su.win_rate!=null?su.win_rate+'%':'—'}</div></div>
+    <div class="stat-box"><div class="lbl">t-stat</div><div class="val ${su.t!=null&&su.t>0?'pos':'neg'}">${su.t!=null?su.t.toFixed(3):'—'}</div></div>
+    <div class="stat-box"><div class="lbl">Bonf. p-value</div><div class="val">${su.bon_p!=null?su.bon_p.toFixed(4):'—'}</div></div>`;
+  document.getElementById('slot-tbl-title').textContent=m.label+' — Per-Slot Performance';
+  document.getElementById('slot-tbl-sub').textContent=`${sc.slots.length} slots · ${fmtN(su.n)} total trades`;
+  const tb=document.getElementById('slot-tbody');
+  const sorted=[...sc.slots].sort((a,b)=>(DAY_ORDER[a.day]||9)-(DAY_ORDER[b.day]||9)||a.bucket.localeCompare(b.bucket));
+  tb.innerHTML=sorted.map(s=>`<tr>
+    <td class="lbl">${s.slot_id}</td><td class="lbl">${s.symbol}</td>
+    <td class="lbl">${s.day}</td><td class="lbl">${s.bucket}</td>
+    <td class="r">${s.n!=null?s.n.toLocaleString():'—'}</td>
+    <td class="r ${cls(s.mean)}">${fmt(s.mean)}</td>
+    <td class="r ${cls(s.total)}">${fmt(s.total,0)}</td>
+    <td class="r ${s.t!=null&&s.t>0?'pos':'neg'}">${s.t!=null?s.t.toFixed(3):'—'}</td>
+    <td class="r">${s.bon_p!=null?s.bon_p.toFixed(4):'—'}</td>
+    <td class="r">${s.win_rate!=null?s.win_rate+'%':'—'}</td>
+    <td class="r pos">${s.pos_months}</td><td class="r neg">${s.neg_months}</td>
+  </tr>`).join('');
+}
+
+function buildPivotTable(){
+  const tb=document.getElementById('pivot-tbody');
+  const baseSlots=D.unfiltered.slots;
+  const scKeys=['unfiltered','macro','vix','vwap','combo'];
+  const lookup={};
+  scKeys.forEach(k=>{lookup[k]={};D[k].slots.forEach(s=>{lookup[k][s.slot_id]=s;});});
+  const sorted=[...baseSlots].sort((a,b)=>(DAY_ORDER[a.day]||9)-(DAY_ORDER[b.day]||9)||a.bucket.localeCompare(b.bucket));
+  tb.innerHTML=sorted.map(base=>{
+    const sid=base.slot_id;
+    const cells=scKeys.map(k=>{const s=lookup[k][sid];return s?s.mean:null;});
+    const tcells=scKeys.map(k=>{const s=lookup[k][sid];return s?s.t:null;});
+    return `<tr>
+      <td class="lbl">${sid}</td><td class="lbl">${base.symbol}</td>
+      <td class="lbl">${base.day}</td><td class="lbl">${base.bucket}</td>
+      ${cells.map(v=>`<td class="r ${cls(v)}">${fmt(v)}</td>`).join('')}
+      ${tcells.map(v=>`<td class="r ${v!=null&&v>0?'pos':'neg'}">${v!=null?v.toFixed(3):'—'}</td>`).join('')}
+    </tr>`;}).join('');
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// BOOTSTRAP
+// ─────────────────────────────────────────────────────────────────────────
+function buildBootstrapTable(){
+  const keys=['unfiltered','macro','vix','vwap','combo'];
+  const tb=document.getElementById('boot-tbody');
+  tb.innerHTML=keys.map(k=>{
+    const b=D.bootstrap[k];const m=SC_META[k];
+    return `<tr>
+      <td style="text-align:left"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${m.color};margin-right:6px"></span>${m.label}</td>
+      <td>${b.n_trades!=null?b.n_trades.toLocaleString():'—'}</td>
+      <td>${b.n_dates!=null?b.n_dates:'—'}</td>
+      <td class="${b.actual_mean>=0?'pos':'neg'}">${b.actual_mean!=null?fmt(b.actual_mean):'—'}</td>
+      <td class="${b.boot_mean!=null&&b.boot_mean>=0?'pos':'neg'}">${b.boot_mean!=null?fmt(b.boot_mean):'Not computed'}</td>
+      <td class="neg">${b.p5!=null?fmt(b.p5):'—'}</td>
+      <td class="neg">${b.p25!=null?fmt(b.p25):'—'}</td>
+      <td class="neg">${b.median!=null?fmt(b.median):'—'}</td>
+      <td>${b.p75!=null?fmt(b.p75):'—'}</td>
+      <td>${b.p95!=null?fmt(b.p95):'—'}</td>
+      <td class="${b.p_negative!=null&&b.p_negative>=0.95?'neg':'pos'}">${b.p_negative!=null?(b.p_negative*100).toFixed(2)+'%':'—'}</td>
+    </tr>`;}).join('');
+}
+
+function buildBootCharts(){
+  const keys=['unfiltered','macro','vix','vwap'];
+  const labels=keys.map(k=>SC_META[k].short);
+  const colors=keys.map(k=>SC_META[k].color);
+  const fills=keys.map(k=>SC_META[k].fill);
+  const bs=keys.map(k=>D.bootstrap[k]);
+  new Chart(document.getElementById('bt-range'),{
+    type:'bar',data:{labels,datasets:[
+      {label:'P5→P95',data:bs.map(b=>[b.p5,b.p95]),backgroundColor:fills,borderColor:colors,borderWidth:1.5,borderRadius:3},
+      {type:'scatter',label:'Observed mean',data:labels.map((l,i)=>({x:l,y:bs[i].actual_mean})),
+       backgroundColor:colors,pointRadius:8,showLine:false}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#94a3b8',font:{size:11}}},
+        tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: `+(Array.isArray(ctx.raw)?`${fmt(ctx.raw[0])} → ${fmt(ctx.raw[1])}`:fmt(ctx.raw))}}},
+      scales:{x:{ticks:TICK,grid:GRID},y:{ticks:{...TICK,callback:v=>'$'+v},grid:GRID}}}
+  });
+  new Chart(document.getElementById('bt-pneg'),{
+    type:'bar',data:{labels,datasets:[{label:'P(neg)',data:bs.map(b=>b.p_negative),
+      backgroundColor:fills.map(f=>f.replace('0.25','0.55').replace('0.2','0.5')),
+      borderColor:colors,borderWidth:1.5,borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`P(neg) = ${(ctx.raw*100).toFixed(2)}%`}}},
+      scales:{x:{min:0.85,max:1.01,ticks:{...TICK,callback:v=>(v*100).toFixed(1)+'%'},grid:GRID},y:{ticks:TICK,grid:GRID}}}
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// COMBINATION
+// ─────────────────────────────────────────────────────────────────────────
+function buildCombo(){
+  const su=D.combo.summary;
+  const strip=document.getElementById('combo-stat-strip');
+  strip.innerHTML=`
+    <div class="stat-box"><div class="lbl">Total Trades</div><div class="val">${fmtN(su.n)}</div></div>
+    <div class="stat-box"><div class="lbl">Mean PnL/Trade</div><div class="val neg">${fmt(su.mean)}</div></div>
+    <div class="stat-box"><div class="lbl">Total PnL</div><div class="val neg">${fmt(su.total,0)}</div></div>
+    <div class="stat-box"><div class="lbl">Win Rate</div><div class="val">${su.win_rate!=null?su.win_rate+'%':'—'}</div></div>
+    <div class="stat-box"><div class="lbl">+Months</div><div class="val pos">${su.pos_months}</div></div>
+    <div class="stat-box"><div class="lbl">−Months</div><div class="val neg">${su.neg_months}</div></div>`;
+
+  // Build combo vs unfiltered table
+  const base={}; D.unfiltered.slots.forEach(s=>base[s.slot_id]=s);
+  const combo={}; D.combo.slots.forEach(s=>combo[s.slot_id]=s);
+  const tb=document.getElementById('combo-tbody');
+  const sids=[...D.combo.slots.map(s=>s.slot_id)].sort((a,b)=>a-b);
+  const slotLabels=[];const uTstat=[],cTstat=[],uMean=[],cMean=[];
+  tb.innerHTML=sids.map(sid=>{
+    const b=base[sid]||{};const c=combo[sid]||{};
+    const dm=c.mean!=null&&b.mean!=null?c.mean-b.mean:null;
+    const pct=b.n>0?((c.n/b.n)*100):0;
+    const dir=dm==null?'—':dm>=0?'<span class="imp">▲ Favourable</span>':'<span class="wor">▼ Lower</span>';
+    slotLabels.push(`${b.symbol} ${b.day} ${b.bucket}`);
+    uTstat.push(b.t);cTstat.push(c.t);uMean.push(b.mean);cMean.push(c.mean);
+    return `<tr>
+      <td class="lbl">${sid}</td><td class="lbl">${b.symbol||'—'}</td>
+      <td class="lbl">${b.day||'—'}</td><td class="lbl">${b.bucket||'—'}</td>
+      <td class="r">${fmtN(b.n)}</td><td class="r">${fmtN(c.n)}</td>
+      <td class="r">${pct.toFixed(1)}%</td>
+      <td class="r ${cls(b.mean)}">${fmt(b.mean)}</td>
+      <td class="r ${cls(c.mean)}">${fmt(c.mean)}</td>
+      <td class="r ${cls(dm)}">${dm!=null?fmt(dm):'—'}</td>
+      <td class="r ${b.t!=null&&b.t>0?'pos':'neg'}">${b.t!=null?b.t.toFixed(3):'—'}</td>
+      <td class="r ${c.t!=null&&c.t>0?'pos':'neg'}">${c.t!=null?c.t.toFixed(3):'—'}</td>
+      <td>${dir}</td>
+    </tr>`;}).join('');
+
+  // t-stat chart
+  new Chart(document.getElementById('co-tstat'),{
+    type:'bar',
+    data:{labels:slotLabels,datasets:[
+      {label:'Unfiltered',data:uTstat,backgroundColor:'rgba(71,85,105,0.6)',borderColor:'rgba(71,85,105,1)',borderWidth:1,borderRadius:2},
+      {label:'Combination',data:cTstat,backgroundColor:'rgba(232,121,249,0.55)',borderColor:'rgba(232,121,249,1)',borderWidth:1,borderRadius:2}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#94a3b8',font:{size:11}}}},
+      scales:{x:{ticks:{...TICK,maxRotation:45},grid:GRID},y:{ticks:TICK,grid:GRID,title:{display:true,text:'t-statistic',color:'#64748b',font:{size:10}}}}}
+  });
+  // Mean PnL chart
+  new Chart(document.getElementById('co-mean'),{
+    type:'bar',
+    data:{labels:slotLabels,datasets:[
+      {label:'Unfiltered',data:uMean,backgroundColor:'rgba(71,85,105,0.6)',borderColor:'rgba(71,85,105,1)',borderWidth:1,borderRadius:2},
+      {label:'Combination',data:cMean,backgroundColor:'rgba(232,121,249,0.55)',borderColor:'rgba(232,121,249,1)',borderWidth:1,borderRadius:2}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#94a3b8',font:{size:11}}},
+        tooltip:{callbacks:{label:ctx=>fmt(ctx.raw)}}},
+      scales:{x:{ticks:{...TICK,maxRotation:45},grid:GRID},y:{ticks:{...TICK,callback:v=>'$'+v.toFixed(0)},grid:GRID}}}
+  });
+
+  // Gate cards
+  const avgTchange=0.845;
+  const slotsImproved=7;const totalSlots=16;
+  const newSig=0;
+  const gates=[
+    {label:'Criterion 1 — t-Stat Improvement',val:`Δ = +${avgTchange}  (threshold: > +0.5)`,
+     met:true,note:'Satisfied. However, this is attributed to variance inflation from the reduced sample size rather than a genuine improvement in the signal distribution.'},
+    {label:'Criterion 2 — Slot Improvement Rate',val:`${slotsImproved} of ${totalSlots} slots (threshold: ≥ ${Math.ceil(totalSlots/2)})`,
+     met:false,note:'Not satisfied. Fewer than half of the eligible slots demonstrated higher mean PnL under the combination filter relative to the unfiltered baseline.'},
+    {label:'Criterion 3 — Newly Significant Slots',val:`${newSig} newly significant (threshold: > 0)`,
+     met:false,note:'Not satisfied. No slot transitioned from non-significant to statistically significant after applying all three filters, even at the Bonferroni-adjusted threshold.'},
+  ];
+  const gc=document.getElementById('gate-cards');
+  gates.forEach(g=>{
+    const d=document.createElement('div');
+    d.className=`card ${g.met?'c-vwap':'c-combo'}`;
+    d.innerHTML=`<div class="clabel">${g.label}</div>
+      <div class="cbig ${g.met?'pos':'neg'}" style="font-size:15px">${g.val}</div>
+      <div class="csub" style="margin-top:10px">${g.note}</div>
+      <span class="pill ${g.met?'pill-ok':'pill-info'}">${g.met?'Criterion met':'Criterion not met'}</span>`;
+    gc.appendChild(d);
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────────────────────────────────
+buildOverviewCards();
+buildOvBootRange();
+buildOvPneg();
+buildOvCumWF();
+renderMonthly('unfiltered');
+renderSlots('unfiltered');
+buildPivotTable();
+buildBootstrapTable();
+buildBootCharts();
+buildCombo();
 </script>
 </body>
 </html>
