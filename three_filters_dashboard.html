@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Three-Filter Validation Dashboard | SC_results_WF</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg:#0a0d14;--surface:#111520;--card:#161c2e;--border:#1e2740;
+    --accent:#3b82f6;--accent2:#8b5cf6;--danger:#ef4444;--warn:#f59e0b;
+    --ok:#10b981;--text:#e2e8f0;--muted:#64748b;
+    --mono:'JetBrains Mono',monospace;--sans:'Inter',sans-serif;
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;line-height:1.6;min-height:100vh}
+  .page{max-width:1320px;margin:0 auto;padding:32px 24px 64px}
+  .header{display:flex;align-items:center;justify-content:space-between;margin-bottom:40px;padding-bottom:24px;border-bottom:1px solid var(--border)}
+  .header-left h1{font-size:22px;font-weight:700;letter-spacing:-.3px}
+  .header-left p{color:var(--muted);font-size:13px;margin-top:4px}
+  .badge{background:#1a0a0a;border:1px solid var(--danger);color:var(--danger);border-radius:6px;padding:6px 14px;font-size:12px;font-weight:600;letter-spacing:.5px}
+  .section{margin-bottom:40px}
+  .section-title{font-size:11px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin-bottom:16px;display:flex;align-items:center;gap:10px}
+  .section-title::after{content:'';flex:1;height:1px;background:var(--border)}
+  .cards{display:grid;grid-template-columns:repeat(5,1fr);gap:14px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px 16px;position:relative;overflow:hidden;transition:border-color .2s,transform .2s}
+  .card:hover{border-color:#2a3a60;transform:translateY(-2px)}
+  .card::before{content:'';position:absolute;inset:0 0 auto 0;height:3px;border-radius:12px 12px 0 0}
+  .card.base::before{background:var(--muted)}.card.macro::before{background:var(--warn)}.card.vix::before{background:var(--accent2)}.card.vwap::before{background:var(--accent)}.card.combo::before{background:var(--danger)}
+  .card-label{font-size:10px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+  .card-mean{font-size:24px;font-weight:700;font-family:var(--mono);color:var(--danger);margin-bottom:6px}
+  .card-mean.pos{color:var(--ok)}
+  .card-sub{font-size:11px;color:var(--muted);margin-bottom:12px}
+  .card-meta{display:flex;flex-direction:column;gap:4px}
+  .card-row{display:flex;justify-content:space-between;font-size:12px}
+  .card-row span:first-child{color:var(--muted)}.card-row span:last-child{font-family:var(--mono)}
+  .p-neg-bar{margin-top:12px;height:4px;background:var(--border);border-radius:2px}
+  .p-neg-fill{height:100%;border-radius:2px;background:var(--danger)}
+  .verdict-chip{display:inline-block;margin-top:12px;font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;padding:3px 10px;border-radius:20px}
+  .chip-fail{background:rgba(239,68,68,.15);color:var(--danger)}.chip-gate{background:rgba(245,158,11,.15);color:var(--warn)}
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .chart-panel{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px}
+  .chart-panel h3{font-size:14px;font-weight:600;margin-bottom:6px}
+  .chart-panel p{font-size:12px;color:var(--muted);margin-bottom:20px}
+  .chart-wrap{position:relative;height:280px}.chart-wrap-lg{position:relative;height:360px}
+  .slot-table-wrap{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+  .slot-table-header{padding:20px 24px 14px;border-bottom:1px solid var(--border)}
+  .slot-table-header h3{font-size:14px;font-weight:600}
+  .slot-table-header p{font-size:12px;color:var(--muted);margin-top:4px}
+  table{width:100%;border-collapse:collapse}
+  thead tr{background:#0d1120}
+  th{padding:10px 14px;text-align:left;font-size:11px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--muted)}
+  th.num,td.num{text-align:right}
+  tbody tr{border-top:1px solid var(--border);transition:background .15s}
+  tbody tr:hover{background:rgba(255,255,255,.02)}
+  td{padding:9px 14px;font-size:12px;font-family:var(--mono)}
+  td.lbl{font-family:var(--sans);font-weight:500}
+  .neg{color:var(--danger)}.pos{color:var(--ok)}
+  .imp{color:var(--ok);font-size:11px;font-weight:700}.wor{color:var(--danger);font-size:11px;font-weight:700}
+  .tab-row{display:flex;gap:2px;margin-bottom:14px}
+  .tab{padding:7px 16px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;background:transparent;color:var(--muted);border:none;transition:all .15s}
+  .tab:hover{background:rgba(255,255,255,.05);color:var(--text)}.tab.active{background:var(--accent);color:#fff}
+  .verdict-box{background:linear-gradient(135deg,#0f0a1a 0%,#150d24 100%);border:1px solid #2d1a4a;border-radius:14px;padding:32px 36px}
+  .verdict-box h2{font-size:17px;font-weight:700;margin-bottom:16px;color:#a78bfa}
+  .verdict-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
+  .verdict-item{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:8px;padding:14px 16px}
+  .verdict-item h4{font-size:12px;color:var(--muted);margin-bottom:6px}
+  .verdict-item p{font-size:13px;font-weight:500}
+  .verdict-final{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.3);border-radius:8px;padding:16px 20px}
+  .verdict-final p{font-size:14px;line-height:1.7;color:#fca5a5}
+  .verdict-final strong{color:#fff}
+  @media(max-width:1000px){.cards{grid-template-columns:repeat(3,1fr)}.two-col{grid-template-columns:1fr}.verdict-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="page">
+
+<div class="header">
+  <div class="header-left">
+    <h1>Three-Filter Validation Dashboard</h1>
+    <p>SC_results_WF &nbsp;·&nbsp; Holdout Jul 2025–Jul 2026 &nbsp;·&nbsp; 21 BH-FDR candidate slots &nbsp;·&nbsp; 5,000 bootstrap resamples, block=date, seed=42</p>
+  </div>
+  <div class="badge">RESEARCH CLOSED — NO EDGE FOUND</div>
+</div>
+
+<!-- Scenario Cards -->
+<div class="section">
+  <div class="section-title">Scenario Overview — Bootstrap Mean PnL/Trade &amp; P(mean &lt; 0)</div>
+  <div class="cards">
+    <div class="card base">
+      <div class="card-label">Unfiltered Baseline</div>
+      <div class="card-mean">−$27.16</div>
+      <div class="card-sub">59,810 trades · 21 slots · 273 dates</div>
+      <div class="card-meta">
+        <div class="card-row"><span>P5 / P95</span><span>−$36.29 / −$18.02</span></div>
+        <div class="card-row"><span>Median</span><span>−$27.19</span></div>
+        <div class="card-row"><span>P(neg)</span><span>1.0000</span></div>
+        <div class="card-row"><span>Worst month</span><span>17.5% · ok</span></div>
+      </div>
+      <div class="p-neg-bar"><div class="p-neg-fill" style="width:100%"></div></div>
+      <span class="verdict-chip chip-fail">SIGNAL FAILS</span>
+    </div>
+    <div class="card macro">
+      <div class="card-label">A — Macro Blackout</div>
+      <div class="card-mean">−$29.16</div>
+      <div class="card-sub">53,177 trades · removes 11.1% · 21 slots</div>
+      <div class="card-meta">
+        <div class="card-row"><span>P5 / P95</span><span>−$39.18 / −$18.82</span></div>
+        <div class="card-row"><span>Median</span><span>−$29.43</span></div>
+        <div class="card-row"><span>P(neg)</span><span>1.0000</span></div>
+        <div class="card-row"><span>Worst month</span><span>18.7% · ok</span></div>
+      </div>
+      <div class="p-neg-bar"><div class="p-neg-fill" style="width:100%"></div></div>
+      <span class="verdict-chip chip-fail">WORSE THAN BASE</span>
+    </div>
+    <div class="card vix">
+      <div class="card-label">B — VIX Regime (&lt;20)</div>
+      <div class="card-mean">−$29.45</div>
+      <div class="card-sub">45,096 trades · removes 24.6% · 21 slots</div>
+      <div class="card-meta">
+        <div class="card-row"><span>P5 / P95</span><span>−$38.73 / −$19.84</span></div>
+        <div class="card-row"><span>Median</span><span>−$29.48</span></div>
+        <div class="card-row"><span>P(neg)</span><span>1.0000</span></div>
+        <div class="card-row"><span>Worst month</span><span>19.7% · ok</span></div>
+      </div>
+      <div class="p-neg-bar"><div class="p-neg-fill" style="width:100%"></div></div>
+      <span class="verdict-chip chip-fail">WORSE THAN BASE</span>
+    </div>
+    <div class="card vwap">
+      <div class="card-label">C — VWAP Directional</div>
+      <div class="card-mean">−$25.14</div>
+      <div class="card-sub">28,848 trades · removes 48.7% · 17 non-FDAX</div>
+      <div class="card-meta">
+        <div class="card-row"><span>P5 / P95</span><span>−$39.91 / −$10.88</span></div>
+        <div class="card-row"><span>Median</span><span>−$25.29</span></div>
+        <div class="card-row"><span>P(neg)</span><span>0.9968</span></div>
+        <div class="card-row"><span>Worst month</span><span>26.8% · ok</span></div>
+      </div>
+      <div class="p-neg-bar"><div class="p-neg-fill" style="width:99.68%"></div></div>
+      <span class="verdict-chip chip-fail">REJECTED (99.7%)</span>
+    </div>
+    <div class="card combo">
+      <div class="card-label">All 3 Combined (AND)</div>
+      <div class="card-mean">−$34.07</div>
+      <div class="card-sub">18,619 trades · removes 68.4% · 16 valid slots</div>
+      <div class="card-meta">
+        <div class="card-row"><span>Slots improved</span><span>7 / 16</span></div>
+        <div class="card-row"><span>New sig. slots</span><span>0 / 16</span></div>
+        <div class="card-row"><span>t-stat Δ</span><span>+0.845 (artifact)</span></div>
+        <div class="card-row"><span>Slot 223 (CL Sun)</span><span>0 trades survive</span></div>
+      </div>
+      <div class="p-neg-bar"><div class="p-neg-fill" style="width:100%"></div></div>
+      <span class="verdict-chip chip-gate">STEP 5 NOT TRIGGERED</span>
+    </div>
+  </div>
+</div>
+
+<!-- Bootstrap + P(neg) Charts -->
+<div class="section">
+  <div class="section-title">Bootstrap Distributions — 5,000 Resamples (block=date, seed=42)</div>
+  <div class="two-col">
+    <div class="chart-panel">
+      <h3>P5 → P95 Bootstrap Range by Scenario</h3>
+      <p>The entire distribution is negative for all individually-tested scenarios. P(neg) = 100% for Macro and VIX; 99.68% for VWAP.</p>
+      <div class="chart-wrap"><canvas id="bootChart"></canvas></div>
+    </div>
+    <div class="chart-panel">
+      <h3>P(mean &lt; 0) — All Scenarios</h3>
+      <p>Probability that the true portfolio mean PnL per trade is negative, under the bootstrap null. All scenarios exceed the 95% rejection threshold.</p>
+      <div class="chart-wrap"><canvas id="pnegChart"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- Cumulative PnL -->
+<div class="section">
+  <div class="section-title">Walk-Forward — Cumulative PnL Jul 2025–Jul 2026</div>
+  <div class="chart-panel">
+    <h3>Cumulative Portfolio PnL — All Scenarios</h3>
+    <p>No concentration flag in any scenario (worst month ≤ 26.8%, threshold = 50%). Losses are consistent and distributed across all 13 holdout months with no single outlier month.</p>
+    <div class="chart-wrap-lg"><canvas id="wfChart"></canvas></div>
+  </div>
+</div>
+
+<!-- Monthly Mean PnL -->
+<div class="section">
+  <div class="section-title">Monthly Mean PnL/Trade — Scenario Detail</div>
+  <div class="chart-panel">
+    <h3>Mean PnL per Trade by Month</h3>
+    <p>Use tabs to switch scenario. Positive months (green) exist but are outnumbered. No filter consistently converts negative months to positive.</p>
+    <div class="tab-row">
+      <button class="tab active" onclick="showS(0,this)">Unfiltered</button>
+      <button class="tab" onclick="showS(1,this)">Macro</button>
+      <button class="tab" onclick="showS(2,this)">VIX</button>
+      <button class="tab" onclick="showS(3,this)">VWAP</button>
+    </div>
+    <div class="chart-wrap"><canvas id="monthlyChart"></canvas></div>
+  </div>
+</div>
+
+<!-- Slot Table -->
+<div class="section">
+  <div class="section-title">Step 4 — Per-Slot: Unfiltered vs All-Three-Combined</div>
+  <div class="slot-table-wrap">
+    <div class="slot-table-header">
+      <h3>16 Non-FDAX Slots Above Statistical Floor (n ≥ 30 after triple filtering)</h3>
+      <p>Slot 223 (CL Sun 18:00) excluded — 0 trades survive all three filters. 4 FDAX slots excluded — no VWAP data available.</p>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Slot</th><th>Sym</th><th>Day</th><th>Bucket</th>
+          <th class="num">Unfilt t</th><th class="num">Unfilt Mean</th>
+          <th class="num">Combo t</th><th class="num">Combo Mean</th>
+          <th class="num">Removed</th><th>Δ Direction</th>
+        </tr>
+      </thead>
+      <tbody id="slotBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Verdict -->
+<div class="section">
+  <div class="section-title">Step 7 — Final Verdict</div>
+  <div class="verdict-box">
+    <h2>All Three Conditioning Filters — Individually and Combined — Ruled Out</h2>
+    <div class="verdict-grid">
+      <div class="verdict-item">
+        <h4>Filter A: Macro Blackout (±30 min)</h4>
+        <p>❌ P(neg)=1.0000 &nbsp;·&nbsp; Mean worsened to −$29.16/trade &nbsp;·&nbsp; 0/21 significant</p>
+      </div>
+      <div class="verdict-item">
+        <h4>Filter B: VIX Regime (prior-day VIX &lt; 20)</h4>
+        <p>❌ P(neg)=1.0000 &nbsp;·&nbsp; Mean worsened to −$29.45/trade &nbsp;·&nbsp; 0/21 significant</p>
+      </div>
+      <div class="verdict-item">
+        <h4>Filter C: VWAP Directional (6h rolling)</h4>
+        <p>❌ P(neg)=0.9968 &nbsp;·&nbsp; Mean −$25.14/trade &nbsp;·&nbsp; 0/17 significant</p>
+      </div>
+      <div class="verdict-item">
+        <h4>All 3 Combined (AND logic, FDAX excluded)</h4>
+        <p>❌ Step 4 gate FAILED &nbsp;·&nbsp; 7/16 improved &nbsp;·&nbsp; Mean −$34.07/trade &nbsp;·&nbsp; Step 5 not triggered</p>
+      </div>
+    </div>
+    <div class="verdict-final">
+      <p>
+        <strong>No conditioning filter, individually or in any combination, produces a result that survives Monte Carlo block bootstrap and walk-forward scrutiny.</strong>
+        P(mean&lt;0) ≥ 96.7% in every scenario. No monthly concentration drives any result — losses distribute consistently across all 13 holdout months.
+        The combination t-stat improvement (+0.845) is a subsampling artifact: removing 68% of trades inflates SE ∝ 1/√n, mechanically pushing t toward zero while mean PnL worsens further.
+        <strong>The research program conclusion is confirmed from every angle: this is a signal problem — calendar-slot identity contains no durable predictive information — not a filtering, execution, regime, or concentration problem.</strong>
+      </p>
+    </div>
+  </div>
+</div>
+
+</div><!-- /page -->
+
+<script>
+const months = ['2025-07','2025-08','2025-09','2025-10','2025-11','2025-12','2026-01','2026-02','2026-03','2026-04','2026-05','2026-06','2026-07'];
+const cumPnL = {
+  unfiltered:[-60310,-147260,-268455,-353798,-388410,-511585,-483735,-661013,-944945,-1134938,-1418875,-1578353,-1624530],
+  macro:     [-66833,-173168,-314880,-363985,-392458,-465683,-413605,-592543,-882045,-1072750,-1360523,-1504705,-1550883],
+  vix:       [-59995,-111348,-234175,-286143,-335893,-457378,-512625,-613170,-702738,-868735,-1130443,-1289720,-1328033],
+  vwap:      [16475,-21690,-118135,-171900,-145563,-173443,-128245,-266825,-306775,-500990,-680078,-717910,-725338],
+};
+const monthMean = {
+  unfiltered:[-12.31,-22.42,-34.83,-20.24,-9.57,-24.57,5.76,-32.98,-42.28,-33.76,-60.31,-55.18,-10.14],
+  macro:     [-17.10,-27.68,-56.62,-16.74,-8.02,-18.51,12.50,-33.48,-49.42,-36.90,-61.83,-52.56,-10.14],
+  vix:       [-12.40,-15.72,-36.04,-17.62,-19.92,-24.28,-15.33,-32.76,-114.83,-43.93,-57.70,-55.59,-8.52],
+  vwap:      [8.04,-17.79,-59.46,-23.85,14.53,-12.10,17.43,-56.59,-13.07,-78.28,-75.98,-25.27,-3.34],
+};
+const bootData=[
+  {label:'Unfiltered', p5:-36.29,p25:-30.95,median:-27.19,p75:-23.47,p95:-18.02,actual:-27.16,pneg:1.0},
+  {label:'Macro alone',p5:-39.18,p25:-33.41,median:-29.43,p75:-25.31,p95:-18.82,actual:-29.16,pneg:1.0},
+  {label:'VIX alone',  p5:-38.73,p25:-33.35,median:-29.48,p75:-25.62,p95:-19.84,actual:-29.45,pneg:1.0},
+  {label:'VWAP alone', p5:-39.91,p25:-31.30,median:-25.29,p75:-19.16,p95:-10.88,actual:-25.14,pneg:0.9968},
+];
+const slotData=[
+  {id:180,sym:'CL',day:'Thu',bkt:'20:00',ut:-4.451,um:-133.33,ct:-3.934,cm:-177.12,rem:71,dir:'WORSENED'},
+  {id:259,sym:'ES',day:'Mon',bkt:'12:00',ut:-7.062,um:-26.95,ct:-2.320,cm:-14.16,rem:64,dir:'IMPROVED'},
+  {id:260,sym:'ES',day:'Mon',bkt:'12:30',ut:-10.694,um:-41.58,ct:-6.477,cm:-39.15,rem:64,dir:'IMPROVED'},
+  {id:282,sym:'ES',day:'Tue',bkt:'00:00',ut:-0.912,um:-14.64,ct:1.240,cm:30.02,rem:72,dir:'IMPROVED'},
+  {id:357,sym:'ES',day:'Wed',bkt:'14:00',ut:-7.478,um:-30.14,ct:-7.032,cm:-52.51,rem:79,dir:'WORSENED'},
+  {id:358,sym:'ES',day:'Wed',bkt:'14:30',ut:-3.449,um:-12.75,ct:-2.539,cm:-18.84,rem:84,dir:'WORSENED'},
+  {id:712,sym:'NQ',day:'Mon',bkt:'09:30',ut:-5.061,um:-42.86,ct:-6.615,cm:-105.15,rem:68,dir:'WORSENED'},
+  {id:714,sym:'NQ',day:'Mon',bkt:'10:30',ut:-1.450,um:-17.51,ct:-2.414,cm:-45.52,rem:62,dir:'WORSENED'},
+  {id:715,sym:'NQ',day:'Mon',bkt:'11:00',ut:-6.169,um:-81.37,ct:-4.957,cm:-111.61,rem:62,dir:'WORSENED'},
+  {id:716,sym:'NQ',day:'Mon',bkt:'11:30',ut:-4.838,um:-67.73,ct:-2.111,cm:-46.50,rem:62,dir:'IMPROVED'},
+  {id:718,sym:'NQ',day:'Mon',bkt:'12:30',ut:-0.839,um:-12.05,ct:-0.924,cm:-22.16,rem:61,dir:'WORSENED'},
+  {id:719,sym:'NQ',day:'Mon',bkt:'13:00',ut:-0.646,um:-8.08,ct:-1.525,cm:-30.11,rem:65,dir:'WORSENED'},
+  {id:854,sym:'NQ',day:'Thu',bkt:'09:30',ut:-1.409,um:-14.90,ct:-0.493,cm:-9.57,rem:54,dir:'IMPROVED'},
+  {id:863,sym:'NQ',day:'Thu',bkt:'14:00',ut:1.448,um:23.01,ct:-1.340,cm:-27.60,rem:55,dir:'WORSENED'},
+  {id:901,sym:'NQ',day:'Fri',bkt:'09:30',ut:-0.117,um:-1.57,ct:0.387,cm:5.72,rem:63,dir:'IMPROVED'},
+  {id:906,sym:'NQ',day:'Fri',bkt:'12:00',ut:-2.888,um:-36.71,ct:-1.442,cm:-25.37,rem:56,dir:'IMPROVED'},
+];
+
+// Slot table
+const tbody=document.getElementById('slotBody');
+slotData.forEach(s=>{
+  const tr=document.createElement('tr');
+  const imp=s.dir==='IMPROVED';
+  tr.innerHTML=`<td class="lbl">${s.id}</td><td class="lbl">${s.sym}</td><td class="lbl">${s.day}</td><td class="lbl">${s.bkt}</td>
+  <td class="num neg">${s.ut.toFixed(3)}</td><td class="num ${s.um>=0?'pos':'neg'}">$${s.um.toFixed(2)}</td>
+  <td class="num ${s.ct>=0?'pos':'neg'}">${s.ct.toFixed(3)}</td><td class="num ${s.cm>=0?'pos':'neg'}">$${s.cm.toFixed(2)}</td>
+  <td class="num">${s.rem}%</td><td><span class="${imp?'imp':'wor'}">${imp?'▲ IMPR':'▼ WORSE'}</span></td>`;
+  tbody.appendChild(tr);
+});
+
+const grid={color:'rgba(255,255,255,0.04)'};
+const tick={color:'#64748b',font:{family:'JetBrains Mono',size:10}};
+const Cs=['rgba(100,116,139,0.8)','rgba(245,158,11,0.85)','rgba(139,92,246,0.85)','rgba(59,130,246,0.85)'];
+
+// Bootstrap range chart
+new Chart(document.getElementById('bootChart'),{
+  type:'bar',
+  data:{labels:bootData.map(d=>d.label),datasets:[
+    {label:'P5→P95',data:bootData.map(d=>[d.p5,d.p95]),backgroundColor:Cs.map(c=>c.replace('0.8','0.2').replace('0.85','0.2')),borderColor:Cs,borderWidth:1.5,borderRadius:3},
+    {type:'scatter',label:'Actual mean',data:bootData.map((d,i)=>({x:bootData[i].label,y:d.actual})),backgroundColor:Cs,pointRadius:7,showLine:false}
+  ]},
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: `+(Array.isArray(ctx.raw)?`$${ctx.raw[0].toFixed(2)} → $${ctx.raw[1].toFixed(2)}`:`$${ctx.raw.toFixed(2)}`)}}},
+    scales:{x:{ticks:{...tick,maxRotation:10},grid},y:{ticks:{...tick,callback:v=>'$'+v},grid}}}
+});
+
+// P(neg) bar chart
+new Chart(document.getElementById('pnegChart'),{
+  type:'bar',data:{labels:bootData.map(d=>d.label),datasets:[{label:'P(neg)',data:bootData.map(d=>d.pneg),backgroundColor:Cs.map(c=>c.replace('0.8','0.65').replace('0.85','0.65')),borderColor:Cs,borderWidth:1.5,borderRadius:4}]},
+  options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`P(neg)=${ctx.raw.toFixed(4)}`}}},
+    scales:{x:{min:0.9,max:1.01,ticks:{...tick,callback:v=>(v*100).toFixed(1)+'%'},grid},y:{ticks:tick,grid}}}
+});
+
+// Cumulative PnL
+new Chart(document.getElementById('wfChart'),{
+  type:'line',
+  data:{labels:months,datasets:[
+    {label:'Unfiltered',data:cumPnL.unfiltered,borderColor:'#64748b',backgroundColor:'transparent',borderWidth:1.5,pointRadius:3,tension:0.3},
+    {label:'Macro',data:cumPnL.macro,borderColor:'#f59e0b',backgroundColor:'transparent',borderWidth:1.5,pointRadius:3,tension:0.3},
+    {label:'VIX',data:cumPnL.vix,borderColor:'#8b5cf6',backgroundColor:'transparent',borderWidth:1.5,pointRadius:3,tension:0.3},
+    {label:'VWAP',data:cumPnL.vwap,borderColor:'#3b82f6',backgroundColor:'rgba(59,130,246,0.05)',borderWidth:2,pointRadius:3,tension:0.3,fill:true},
+  ]},
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{labels:{color:'#94a3b8',font:{family:'Inter',size:12}}},tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: $${ctx.raw.toLocaleString()}`}}},
+    scales:{x:{ticks:tick,grid},y:{ticks:{...tick,callback:v=>'$'+(v/1000).toFixed(0)+'K'},grid,title:{display:true,text:'Cumulative PnL ($)',color:'#64748b',font:{size:11}}}}}
+});
+
+// Monthly mean bar
+const sKeys=['unfiltered','macro','vix','vwap'];
+const sLabels=['Unfiltered','Macro alone','VIX alone','VWAP alone'];
+let mChart=null;
+function buildM(idx){
+  const d=monthMean[sKeys[idx]];
+  const cols=d.map(v=>v>=0?'rgba(16,185,129,0.7)':'rgba(239,68,68,0.7)');
+  const bc=d.map(v=>v>=0?'rgba(16,185,129,1)':'rgba(239,68,68,1)');
+  if(mChart)mChart.destroy();
+  mChart=new Chart(document.getElementById('monthlyChart'),{
+    type:'bar',data:{labels:months,datasets:[{label:sLabels[idx]+' — Mean PnL/Trade',data:d,backgroundColor:cols,borderColor:bc,borderWidth:1,borderRadius:3}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#94a3b8',font:{size:12}}},tooltip:{callbacks:{label:ctx=>`$${ctx.raw.toFixed(2)}/trade`}}},
+      scales:{x:{ticks:tick,grid},y:{ticks:{...tick,callback:v=>'$'+v.toFixed(0)},grid,title:{display:true,text:'Mean PnL/Trade',color:'#64748b',font:{size:11}}}}}
+  });
+}
+buildM(0);
+function showS(idx,btn){document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));btn.classList.add('active');buildM(idx);}
+</script>
+</body>
+</html>
