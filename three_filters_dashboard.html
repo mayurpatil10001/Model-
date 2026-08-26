@@ -163,6 +163,7 @@ td .neu2{color:var(--muted);font-size:10px;font-weight:700}
   <button class="nav-tab" onclick="showPanel('bootstrap',this)">Bootstrap Analysis</button>
   <button class="nav-tab" onclick="showPanel('combo',this)">Combination Results</button>
   <button class="nav-tab" onclick="showPanel('findings',this)">Study Findings</button>
+  <button class="nav-tab" onclick="showPanel('trades',this)">Trade Records</button>
 </div>
 
 <!-- ───────────────────────── OVERVIEW ───────────────────────────── -->
@@ -448,6 +449,98 @@ td .neu2{color:var(--muted);font-size:10px;font-weight:700}
           <tr><td>C — VWAP Directional</td><td class="neg">−$25.14</td><td>0.9968</td><td>−$10.88</td><td>Marginal; does not meet confidence threshold</td></tr>
           <tr><td>All 3 Combined (AND)</td><td class="neg">−$34.07</td><td>—</td><td>—</td><td>Step 4 gate not satisfied; not advanced to bootstrap</td></tr>
         </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ───────────────────────── TRADE RECORDS ─────────────────────── -->
+<div id="panel-trades" class="panel">
+  <div class="section">
+    <div class="sec-title">All Individual Trade Records — 59,810 Holdout Trades</div>
+
+    <!-- Filters -->
+    <div style="display:grid;grid-template-columns:repeat(6,1fr) auto;gap:10px;margin-bottom:16px;align-items:end">
+      <div>
+        <label style="font-size:10px;color:var(--muted);display:block;margin-bottom:4px;font-weight:600;letter-spacing:.5px;text-transform:uppercase">Scenario</label>
+        <select id="tr-sc" onchange="applyTrades()" style="width:100%;background:#161c2e;border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:6px;font-size:12px">
+          <option value="all">All Trades</option>
+          <option value="ma">A — Macro Pass</option>
+          <option value="vix">B — VIX Pass</option>
+          <option value="vwap">C — VWAP Pass</option>
+          <option value="combo">All 3 Combined</option>
+          <option value="ma0">Macro Blocked (excluded by A)</option>
+          <option value="vix0">High-Vol (excluded by B)</option>
+          <option value="vwap0">VWAP Misaligned (excluded by C)</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:10px;color:var(--muted);display:block;margin-bottom:4px;font-weight:600;letter-spacing:.5px;text-transform:uppercase">Symbol</label>
+        <select id="tr-sym" onchange="applyTrades()" style="width:100%;background:#161c2e;border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:6px;font-size:12px">
+          <option value="">All Symbols</option>
+          <option>ES</option><option>NQ</option><option>CL</option><option>FDAX</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:10px;color:var(--muted);display:block;margin-bottom:4px;font-weight:600;letter-spacing:.5px;text-transform:uppercase">Month</label>
+        <select id="tr-mo" onchange="applyTrades()" style="width:100%;background:#161c2e;border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:6px;font-size:12px">
+          <option value="">All Months</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:10px;color:var(--muted);display:block;margin-bottom:4px;font-weight:600;letter-spacing:.5px;text-transform:uppercase">Day</label>
+        <select id="tr-day" onchange="applyTrades()" style="width:100%;background:#161c2e;border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:6px;font-size:12px">
+          <option value="">All Days</option>
+          <option>Mon</option><option>Tue</option><option>Wed</option><option>Thu</option><option>Fri</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:10px;color:var(--muted);display:block;margin-bottom:4px;font-weight:600;letter-spacing:.5px;text-transform:uppercase">Side</label>
+        <select id="tr-side" onchange="applyTrades()" style="width:100%;background:#161c2e;border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:6px;font-size:12px">
+          <option value="">Both Sides</option>
+          <option>LONG</option><option>SHORT</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:10px;color:var(--muted);display:block;margin-bottom:4px;font-weight:600;letter-spacing:.5px;text-transform:uppercase">PnL Range</label>
+        <select id="tr-pnl" onchange="applyTrades()" style="width:100%;background:#161c2e;border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:6px;font-size:12px">
+          <option value="">All PnL</option>
+          <option value="pos">Winners only</option>
+          <option value="neg">Losers only</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button onclick="exportTradeCSV()" style="padding:7px 14px;background:var(--accent);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;white-space:nowrap">⬇ CSV</button>
+        <button onclick="resetTrades()" style="padding:7px 12px;background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:12px">Reset</button>
+      </div>
+    </div>
+
+    <!-- Stat strip -->
+    <div id="tr-stat-strip" class="stat-strip" style="margin-bottom:16px"></div>
+
+    <!-- Loading state -->
+    <div id="tr-loading" style="text-align:center;padding:40px;color:var(--muted);font-size:13px">Loading trade records…</div>
+
+    <!-- Table -->
+    <div id="tr-tbl-wrap" class="tbl-wrap" style="display:none;max-height:540px">
+      <div class="tbl-hdr">
+        <div style="display:flex;align-items:center;gap:16px">
+          <h3 id="tr-count-lbl">Trade Records</h3>
+          <span id="tr-page-lbl" style="color:var(--muted);font-size:11px"></span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <button id="tr-prev" onclick="trPage(-1)" style="padding:4px 10px;background:#1e2740;border:1px solid var(--border);color:var(--text);border-radius:4px;cursor:pointer;font-size:12px">&#8592; Prev</button>
+          <button id="tr-next" onclick="trPage(1)" style="padding:4px 10px;background:#1e2740;border:1px solid var(--border);color:var(--text);border-radius:4px;cursor:pointer;font-size:12px">Next &#8594;</button>
+        </div>
+      </div>
+      <table>
+        <thead><tr>
+          <th>#</th><th>Date</th><th>Month</th><th>Symbol</th><th>Day</th>
+          <th>Bucket</th><th>Slot</th><th>Side</th>
+          <th class="r">Entry Px</th><th class="r">PnL</th>
+          <th class="r">Macro ✓</th><th class="r">VIX ✓</th><th class="r">VWAP ✓</th><th class="r">All ✓</th>
+        </tr></thead>
+        <tbody id="tr-tbody"></tbody>
       </table>
     </div>
   </div>
@@ -925,6 +1018,140 @@ buildBootstrapTable();
 buildBootCharts();
 buildCombo();
 buildMatrix('mean');
+
+// ─────────────────────────────────────────────────────────────────────────
+// TRADE RECORDS
+// ─────────────────────────────────────────────────────────────────────────
+let TR=null, TR_filtered=[], TR_page=0, TR_PS=100;
+const H={dt:0,mo:1,sym:2,day:3,bkt:4,sid:5,side:6,px:7,pnl:8,ma:9,vix:10,vwap:11,combo:12};
+
+async function loadTrades(){
+  if(TR!==null)return;
+  try{
+    const r=await fetch('results/all_trades.json');
+    const j=await r.json();
+    TR=j.rows;
+    // Populate month dropdown
+    const mos=[...new Set(TR.map(r=>r[H.mo]))].sort();
+    const sel=document.getElementById('tr-mo');
+    mos.forEach(m=>{const o=document.createElement('option');o.value=m;o.textContent=m;sel.appendChild(o);});
+    document.getElementById('tr-loading').style.display='none';
+    document.getElementById('tr-tbl-wrap').style.display='block';
+    applyTrades();
+  }catch(e){
+    document.getElementById('tr-loading').textContent='Failed to load trade data. Is the local server running? Error: '+e.message;
+  }
+}
+
+function applyTrades(){
+  if(!TR)return;
+  const sc=document.getElementById('tr-sc').value;
+  const sym=document.getElementById('tr-sym').value;
+  const mo=document.getElementById('tr-mo').value;
+  const day=document.getElementById('tr-day').value;
+  const side=document.getElementById('tr-side').value;
+  const pnl=document.getElementById('tr-pnl').value;
+  TR_filtered=TR.filter(r=>{
+    if(sc==='ma'    && r[H.ma]!==1)return false;
+    if(sc==='vix'   && r[H.vix]!==1)return false;
+    if(sc==='vwap'  && r[H.vwap]!==1)return false;
+    if(sc==='combo' && r[H.combo]!==1)return false;
+    if(sc==='ma0'   && r[H.ma]!==0)return false;
+    if(sc==='vix0'  && r[H.vix]!==0)return false;
+    if(sc==='vwap0' && r[H.vwap]!==0)return false;
+    if(sym && r[H.sym]!==sym)return false;
+    if(mo  && r[H.mo]!==mo)return false;
+    if(day && r[H.day]!==day)return false;
+    if(side && r[H.side]!==side)return false;
+    if(pnl==='pos' && r[H.pnl]<=0)return false;
+    if(pnl==='neg' && r[H.pnl]>=0)return false;
+    return true;
+  });
+  TR_page=0;
+  renderTradeStats();
+  renderTradePage();
+}
+
+function renderTradeStats(){
+  const f=TR_filtered;
+  const n=f.length;
+  const totalPnl=f.reduce((a,r)=>a+r[H.pnl],0);
+  const meanPnl=n>0?totalPnl/n:0;
+  const winners=f.filter(r=>r[H.pnl]>0).length;
+  const wr=n>0?((winners/n)*100).toFixed(1)+'%':'—';
+  const strip=document.getElementById('tr-stat-strip');
+  strip.innerHTML=`
+    <div class="stat-box"><div class="lbl">Filtered Trades</div><div class="val">${n.toLocaleString()}</div></div>
+    <div class="stat-box"><div class="lbl">Total PnL</div><div class="val ${totalPnl>=0?'pos':'neg'}">${fmt(totalPnl,0)}</div></div>
+    <div class="stat-box"><div class="lbl">Mean PnL/Trade</div><div class="val ${meanPnl>=0?'pos':'neg'}">${fmt(meanPnl)}</div></div>
+    <div class="stat-box"><div class="lbl">Winners</div><div class="val pos">${winners.toLocaleString()}</div></div>
+    <div class="stat-box"><div class="lbl">Losers</div><div class="val neg">${(n-winners).toLocaleString()}</div></div>
+    <div class="stat-box"><div class="lbl">Win Rate</div><div class="val">${wr}</div></div>`;
+}
+
+function renderTradePage(){
+  const f=TR_filtered;
+  const n=f.length;
+  const pages=Math.max(1,Math.ceil(n/TR_PS));
+  if(TR_page>=pages)TR_page=pages-1;
+  const start=TR_page*TR_PS;
+  const slice=f.slice(start,start+TR_PS);
+  document.getElementById('tr-count-lbl').textContent=`Trade Records — ${n.toLocaleString()} matching`;
+  document.getElementById('tr-page-lbl').textContent=`Page ${TR_page+1} of ${pages}`;
+  document.getElementById('tr-prev').disabled=TR_page===0;
+  document.getElementById('tr-next').disabled=TR_page>=pages-1;
+  const chk=v=>v===1?'<span class="pos">✓</span>':v===0?'<span class="neg">✗</span>':'<span class="neu">—</span>';
+  const tb=document.getElementById('tr-tbody');
+  tb.innerHTML=slice.map((r,i)=>{
+    const rowNum=start+i+1;
+    const pnlCls=r[H.pnl]>=0?'pos':'neg';
+    return `<tr>
+      <td class="r" style="color:var(--muted);font-size:11px">${rowNum}</td>
+      <td class="lbl">${r[H.dt]}</td>
+      <td>${r[H.mo]}</td>
+      <td class="lbl" style="font-weight:700">${r[H.sym]}</td>
+      <td>${r[H.day]}</td>
+      <td>${r[H.bkt]}</td>
+      <td style="color:var(--muted)">${r[H.sid]}</td>
+      <td class="${r[H.side]==='LONG'?'pos':'neg'}" style="font-weight:600">${r[H.side]}</td>
+      <td class="r">${r[H.px].toFixed(2)}</td>
+      <td class="r ${pnlCls}" style="font-weight:700">${fmt(r[H.pnl])}</td>
+      <td class="r">${chk(r[H.ma])}</td>
+      <td class="r">${chk(r[H.vix])}</td>
+      <td class="r">${chk(r[H.vwap])}</td>
+      <td class="r">${chk(r[H.combo])}</td>
+    </tr>`;
+  }).join('');
+}
+
+function trPage(dir){
+  const pages=Math.ceil(TR_filtered.length/TR_PS);
+  TR_page=Math.max(0,Math.min(TR_page+dir,pages-1));
+  renderTradePage();
+  document.getElementById('tr-tbl-wrap').scrollTop=0;
+}
+
+function resetTrades(){
+  ['tr-sc','tr-sym','tr-mo','tr-day','tr-side','tr-pnl'].forEach(id=>{const el=document.getElementById(id);if(el)el.selectedIndex=0;});
+  applyTrades();
+}
+
+function exportTradeCSV(){
+  const f=TR_filtered;
+  const header='Date,Month,Symbol,Day,Bucket,SlotID,Side,EntryPrice,PnL,MacroPass,VIXPass,VWAPPass,AllPass';
+  const rows=f.map(r=>[r[H.dt],r[H.mo],r[H.sym],r[H.day],r[H.bkt],r[H.sid],r[H.side],r[H.px],r[H.pnl],
+    r[H.ma],r[H.vix],r[H.vwap]===null?'NA':r[H.vwap],r[H.combo]].join(','));
+  const blob=new Blob([header+'\n'+rows.join('\n')],{type:'text/csv'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download=`trades_filtered_${new Date().toISOString().slice(0,10)}.csv`;a.click();
+}
+
+// Lazy-load trades only when tab is visited
+const _origShowPanel=showPanel;
+showPanel=function(id,btn){
+  _origShowPanel(id,btn);
+  if(id==='trades')loadTrades();
+};
 </script>
 </body>
 </html>
