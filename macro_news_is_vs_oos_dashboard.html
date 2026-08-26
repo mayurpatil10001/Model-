@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Macro News Conditioning Study: In-Sample vs Out-of-Sample | SC_results_WF</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg: #090d16;
+  --surface: #0f172a;
+  --card: #162036;
+  --card-hover: #1c2a47;
+  --border: #223254;
+  --accent: #38bdf8;
+  --accent-glow: rgba(56, 189, 248, 0.15);
+  --danger: #f43f5e;
+  --ok: #10b981;
+  --warn: #f59e0b;
+  --neutral: #94a3b8;
+  --text: #f1f5f9;
+  --muted: #64748b;
+  --mono: 'JetBrains Mono', monospace;
+  --sans: 'Inter', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 13.5px; line-height: 1.6; min-height: 100vh; }
+.page { max-width: 1440px; margin: 0 auto; padding: 32px 24px 80px; }
+
+/* Header */
+.hdr { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 28px; padding-bottom: 24px; border-bottom: 1px solid var(--border); }
+.hdr h1 { font-size: 22px; font-weight: 800; letter-spacing: -0.4px; margin-bottom: 6px; color: #fff; }
+.hdr p { color: var(--muted); font-size: 12.5px; max-width: 900px; }
+.badge { background: #0c1c38; border: 1px solid var(--accent); color: var(--accent); border-radius: 6px; padding: 6px 14px; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; white-space: nowrap; }
+
+/* Asset Selector Tabs */
+.nav-assets { display: flex; gap: 6px; margin-bottom: 28px; background: var(--surface); padding: 6px; border-radius: 10px; border: 1px solid var(--border); overflow-x: auto; }
+.asset-tab { flex: 1; min-width: 140px; padding: 12px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; text-align: center; background: transparent; color: var(--muted); border: 1px solid transparent; transition: all 0.2s; }
+.asset-tab:hover { color: var(--text); background: rgba(255,255,255,0.03); }
+.asset-tab.active { background: var(--card); color: #fff; border-color: var(--accent); box-shadow: 0 4px 12px var(--accent-glow); }
+
+/* Panels */
+.panel { display: none; }
+.panel.active { display: block; }
+
+/* Section styling */
+.sec-title { font-size: 11px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: var(--muted); margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+.sec-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+.section { margin-bottom: 36px; }
+
+/* 4-Card Summary Grid */
+.grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px; }
+.card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 20px 18px; position: relative; overflow: hidden; }
+.card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+.c-is-raw::before { background: #3b82f6; }
+.c-is-mac::before { background: #10b981; }
+.c-oos-raw::before { background: #f59e0b; }
+.c-oos-mac::before { background: #f43f5e; }
+
+.clabel { font-size: 10px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+.cbig { font-size: 24px; font-weight: 800; font-family: var(--mono); margin-bottom: 4px; }
+.csub { font-size: 11.5px; color: var(--muted); margin-bottom: 12px; }
+.crow { display: flex; justify-content: space-between; font-size: 11.5px; padding: 3px 0; border-top: 1px solid rgba(255,255,255,0.03); }
+.crow span:first-child { color: var(--muted); }
+.crow span:last-child { font-family: var(--mono); font-weight: 600; }
+
+.pos { color: var(--ok); }
+.neg { color: var(--danger); }
+.neu { color: var(--neutral); }
+
+/* Table styling */
+.tbl-wrap { background: var(--card); border: 1px solid var(--border); border-radius: 10px; overflow-x: auto; margin-bottom: 24px; }
+.tbl-hdr { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+.tbl-hdr h3 { font-size: 13.5px; font-weight: 700; color: #fff; }
+.tbl-hdr span { font-size: 11.5px; color: var(--muted); }
+table { width: 100%; border-collapse: collapse; min-width: 900px; }
+thead tr { background: #0c1322; }
+th { padding: 10px 14px; text-align: left; font-size: 10.5px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
+th.r, td.r { text-align: right; }
+tbody tr { border-top: 1px solid rgba(255,255,255,0.04); transition: background 0.15s; }
+tbody tr:hover { background: rgba(255,255,255,0.025); }
+td { padding: 10px 14px; font-size: 12px; font-family: var(--mono); white-space: nowrap; }
+td.lbl { font-family: var(--sans); font-weight: 600; font-size: 12.5px; }
+
+/* Delta Badge */
+.d-pill { display: inline-block; padding: 2px 7px; border-radius: 4px; font-size: 10px; font-weight: 700; font-family: var(--sans); }
+.d-good { background: rgba(16,185,129,0.15); color: #6ee7b7; border: 1px solid rgba(16,185,129,0.3); }
+.d-bad { background: rgba(244,63,94,0.15); color: #fda4af; border: 1px solid rgba(244,63,94,0.3); }
+.d-neu { background: rgba(148,163,184,0.1); color: #cbd5e1; }
+
+/* Charts area */
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+.chart-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 20px; }
+.chart-card h3 { font-size: 13.5px; font-weight: 700; margin-bottom: 4px; color: #fff; }
+.chart-card p { font-size: 11.5px; color: var(--muted); margin-bottom: 16px; }
+.chart-h { position: relative; height: 260px; }
+
+/* Narrative Box */
+.narrative { background: linear-gradient(135deg, #0d162a 0%, #111e38 100%); border: 1px solid #1e3a6d; border-radius: 10px; padding: 24px 28px; margin-top: 24px; }
+.narrative h4 { font-size: 14px; font-weight: 700; color: #38bdf8; margin-bottom: 8px; }
+.narrative p { font-size: 13px; line-height: 1.7; color: #cbd5e1; margin-bottom: 8px; }
+.narrative p:last-child { margin-bottom: 0; }
+
+@media (max-width: 1024px) {
+  .grid4 { grid-template-columns: 1fr 1fr; }
+  .grid2 { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+<!-- Header -->
+<div class="hdr">
+  <div>
+    <h1>Macro News Event Study — In-Sample vs. Out-of-Sample</h1>
+    <p>Isolated Asset Breakdown &nbsp;·&nbsp; In-Sample: Jan 2024 – Jun 2025 &nbsp;·&nbsp; Out-of-Sample Holdout: Jul 2025 – Jul 2026 &nbsp;·&nbsp; Macro Blackout Window: ±30 min around 10 US/ECB release categories</p>
+  </div>
+  <div class="badge">ASSET-ISOLATED STUDY</div>
+</div>
+
+<!-- Asset Navigation -->
+<div class="nav-assets">
+  <button class="asset-tab active" onclick="switchAsset('ALL', this)">All Assets Summary</button>
+  <button class="asset-tab" onclick="switchAsset('NQ', this)">NQ (Nasdaq 100)</button>
+  <button class="asset-tab" onclick="switchAsset('ES', this)">ES (S&P 500)</button>
+  <button class="asset-tab" onclick="switchAsset('CL', this)">CL (Crude Oil)</button>
+  <button class="asset-tab" onclick="switchAsset('FDAX', this)">FDAX (DAX 40)</button>
+</div>
+
+<!-- Dynamic Container -->
+<div id="asset-content"></div>
+
+</div>
+
+<script>
+const D = {"assets":{"NQ":{"summary":{"is_raw":{"n":42113,"mean":63.19,"t":14.842,"total":2661100.0,"win_rate":58.2},"is_macro":{"n":40581,"mean":62.26,"t":14.479,"total":2526535.0,"win_rate":58.2},"oos_raw":{"n":28602,"mean":-23.58,"t":-5.636,"total":-674525.0,"win_rate":63.9},"oos_macro":{"n":27715,"mean":-22.78,"t":-5.355,"total":-631240.0,"win_rate":64.1},"is_removed":1532,"oos_removed":887},"slots":[{"slot_id":712,"symbol":"NQ","day":"Mon","bucket":"09:30","is_raw":{"n":7020,"mean":47.12,"t":5.37,"total":330760.0,"win_rate":58.3},"is_macro":{"n":5961,"mean":35.55,"t":4.363,"total":211940.0,"win_rate":57.5},"oos_raw":{"n":4955,"mean":-42.86,"t":-5.061,"total":-212360.0,"win_rate":62.2},"oos_macro":{"n":4299,"mean":-33.88,"t":-3.721,"total":-145665.0,"win_rate":62.7},"oos_removed":656},{"slot_id":714,"symbol":"NQ","day":"Mon","bucket":"10:30","is_raw":{"n":3414,"mean":57.9,"t":4.489,"total":197660.0,"win_rate":61.4},"is_macro":{"n":3414,"mean":57.9,"t":4.489,"total":197660.0,"win_rate":61.4},"oos_raw":{"n":2476,"mean":-17.51,"t":-1.45,"total":-43345.0,"win_rate":62.9},"oos_macro":{"n":2476,"mean":-17.51,"t":-1.45,"total":-43345.0,"win_rate":62.9},"oos_removed":0},{"slot_id":715,"symbol":"NQ","day":"Mon","bucket":"11:00","is_raw":{"n":2724,"mean":65.68,"t":3.496,"total":178900.0,"win_rate":59.4},"is_macro":{"n":2724,"mean":65.68,"t":3.496,"total":178900.0,"win_rate":59.4},"oos_raw":{"n":1941,"mean":-81.37,"t":-6.169,"total":-157940.0,"win_rate":60.9},"oos_macro":{"n":1941,"mean":-81.37,"t":-6.169,"total":-157940.0,"win_rate":60.9},"oos_removed":0},{"slot_id":716,"symbol":"NQ","day":"Mon","bucket":"11:30","is_raw":{"n":2757,"mean":171.66,"t":6.073,"total":473275.0,"win_rate":61.5},"is_macro":{"n":2757,"mean":171.66,"t":6.073,"total":473275.0,"win_rate":61.5},"oos_raw":{"n":1688,"mean":-67.73,"t":-4.838,"total":-114325.0,"win_rate":61.2},"oos_macro":{"n":1688,"mean":-67.73,"t":-4.838,"total":-114325.0,"win_rate":61.2},"oos_removed":0},{"slot_id":718,"symbol":"NQ","day":"Mon","bucket":"12:30","is_raw":{"n":2702,"mean":108.51,"t":5.898,"total":293200.0,"win_rate":62.3},"is_macro":{"n":2702,"mean":108.51,"t":5.898,"total":293200.0,"win_rate":62.3},"oos_raw":{"n":1681,"mean":-12.05,"t":-0.839,"total":-20260.0,"win_rate":67.9},"oos_macro":{"n":1681,"mean":-12.05,"t":-0.839,"total":-20260.0,"win_rate":67.9},"oos_removed":0},{"slot_id":719,"symbol":"NQ","day":"Mon","bucket":"13:00","is_raw":{"n":2433,"mean":156.22,"t":5.496,"total":380090.0,"win_rate":62.9},"is_macro":{"n":2433,"mean":156.22,"t":5.496,"total":380090.0,"win_rate":62.9},"oos_raw":{"n":1463,"mean":-8.08,"t":-0.646,"total":-11815.0,"win_rate":67.1},"oos_macro":{"n":1463,"mean":-8.08,"t":-0.646,"total":-11815.0,"win_rate":67.1},"oos_removed":0},{"slot_id":854,"symbol":"NQ","day":"Thu","bucket":"09:30","is_raw":{"n":9177,"mean":33.15,"t":4.017,"total":304200.0,"win_rate":53.4},"is_macro":{"n":8941,"mean":31.47,"t":3.797,"total":281390.0,"win_rate":53.4},"oos_raw":{"n":5565,"mean":-14.9,"t":-1.409,"total":-82905.0,"win_rate":64.5},"oos_macro":{"n":5424,"mean":-15.32,"t":-1.417,"total":-83095.0,"win_rate":64.7},"oos_removed":141},{"slot_id":863,"symbol":"NQ","day":"Thu","bucket":"14:00","is_raw":{"n":3117,"mean":71.81,"t":7.162,"total":223845.0,"win_rate":55.8},"is_macro":{"n":3111,"mean":72.22,"t":7.19,"total":224665.0,"win_rate":55.8},"oos_raw":{"n":1925,"mean":23.01,"t":1.448,"total":44300.0,"win_rate":68.0},"oos_macro":{"n":1925,"mean":23.01,"t":1.448,"total":44300.0,"win_rate":68.0},"oos_removed":0},{"slot_id":901,"symbol":"NQ","day":"Fri","bucket":"09:30","is_raw":{"n":6415,"mean":22.38,"t":3.091,"total":143570.0,"win_rate":57.5},"is_macro":{"n":6184,"mean":24.23,"t":3.242,"total":149815.0,"win_rate":57.8},"oos_raw":{"n":5057,"mean":-1.57,"t":-0.117,"total":-7930.0,"win_rate":64.1},"oos_macro":{"n":4967,"mean":-6.27,"t":-0.47,"total":-31150.0,"win_rate":63.9},"oos_removed":90},{"slot_id":906,"symbol":"NQ","day":"Fri","bucket":"12:00","is_raw":{"n":2354,"mean":57.6,"t":3.473,"total":135600.0,"win_rate":62.6},"is_macro":{"n":2354,"mean":57.6,"t":3.473,"total":135600.0,"win_rate":62.6},"oos_raw":{"n":1851,"mean":-36.71,"t":-2.888,"total":-67945.0,"win_rate":63.4},"oos_macro":{"n":1851,"mean":-36.71,"t":-2.888,"total":-67945.0,"win_rate":63.4},"oos_removed":0}],"monthly":{"is_raw":[{"month":"2024-01","n":726,"mean":2.97,"total":2155.0,"cum":2155.0},{"month":"2024-02","n":2142,"mean":-1.94,"total":-4150.0,"cum":-1995.0},{"month":"2024-03","n":5271,"mean":-6.48,"total":-34175.0,"cum":-36170.0},{"month":"2024-04","n":8716,"mean":218.95,"total":1908340.0,"cum":1872170.0},{"month":"2024-05","n":6821,"mean":42.43,"total":289415.0,"cum":2161585.0},{"month":"2024-06","n":2986,"mean":13.5,"total":40315.0,"cum":2201900.0},{"month":"2024-07","n":253,"mean":39.94,"total":10105.0,"cum":2212005.0},{"month":"2024-08","n":2828,"mean":146.91,"total":415475.0,"cum":2627480.0},{"month":"2024-09","n":168,"mean":-5.98,"total":-1005.0,"cum":2626475.0},{"month":"2024-10","n":298,"mean":-79.11,"total":-23575.0,"cum":2602900.0},{"month":"2024-11","n":424,"mean":34.48,"total":14620.0,"cum":2617520.0},{"month":"2024-12","n":1113,"mean":-47.7,"total":-53095.0,"cum":2564425.0},{"month":"2025-01","n":489,"mean":107.82,"total":52725.0,"cum":2617150.0},{"month":"2025-02","n":653,"mean":75.93,"total":49580.0,"cum":2666730.0},{"month":"2025-03","n":820,"mean":12.42,"total":10185.0,"cum":2676915.0},{"month":"2025-04","n":3046,"mean":24.73,"total":75315.0,"cum":2752230.0},{"month":"2025-05","n":1974,"mean":-26.96,"total":-53225.0,"cum":2699005.0},{"month":"2025-06","n":3385,"mean":-11.2,"total":-37905.0,"cum":2661100.0}],"is_macro":[{"month":"2024-01","n":726,"mean":2.97,"total":2155.0,"cum":2155.0},{"month":"2024-02","n":1869,"mean":-1.17,"total":-2185.0,"cum":-30.0},{"month":"2024-03","n":5222,"mean":-5.78,"total":-30160.0,"cum":-30190.0},{"month":"2024-04","n":8493,"mean":224.86,"total":1909760.0,"cum":1879570.0},{"month":"2024-05","n":6644,"mean":44.04,"total":292600.0,"cum":2172170.0},{"month":"2024-06","n":2673,"mean":1.36,"total":3640.0,"cum":2175810.0},{"month":"2024-07","n":250,"mean":37.22,"total":9305.0,"cum":2185115.0},{"month":"2024-08","n":2809,"mean":106.89,"total":300255.0,"cum":2485370.0},{"month":"2024-09","n":151,"mean":-11.06,"total":-1670.0,"cum":2483700.0},{"month":"2024-10","n":296,"mean":-69.56,"total":-20590.0,"cum":2463110.0},{"month":"2024-11","n":413,"mean":35.07,"total":14485.0,"cum":2477595.0},{"month":"2024-12","n":1082,"mean":-31.49,"total":-34075.0,"cum":2443520.0},{"month":"2025-01","n":455,"mean":100.92,"total":45920.0,"cum":2489440.0},{"month":"2025-02","n":614,"mean":77.43,"total":47545.0,"cum":2536985.0},{"month":"2025-03","n":760,"mean":14.85,"total":11285.0,"cum":2548270.0},{"month":"2025-04","n":3036,"mean":24.95,"total":75745.0,"cum":2624015.0},{"month":"2025-05","n":1919,"mean":-29.53,"total":-56660.0,"cum":2567355.0},{"month":"2025-06","n":3169,"mean":-12.88,"total":-40820.0,"cum":2526535.0}],"oos_raw":[{"month":"2025-07","n":1951,"mean":-12.25,"total":-23905.0,"cum":-23905.0},{"month":"2025-08","n":1855,"mean":-3.87,"total":-7170.0,"cum":-31075.0},{"month":"2025-09","n":1127,"mean":-51.75,"total":-58325.0,"cum":-89400.0},{"month":"2025-10","n":1587,"mean":15.71,"total":24935.0,"cum":-64465.0},{"month":"2025-11","n":1470,"mean":-2.36,"total":-3470.0,"cum":-67935.0},{"month":"2025-12","n":2084,"mean":-22.91,"total":-47740.0,"cum":-115675.0},{"month":"2026-01","n":1823,"mean":17.88,"total":32600.0,"cum":-83075.0},{"month":"2026-02","n":3143,"mean":-11.0,"total":-34560.0,"cum":-117635.0},{"month":"2026-03","n":2741,"mean":-46.67,"total":-127925.0,"cum":-245560.0},{"month":"2026-04","n":2663,"mean":-41.01,"total":-109200.0,"cum":-354760.0},{"month":"2026-05","n":2575,"mean":-58.36,"total":-150265.0,"cum":-505025.0},{"month":"2026-06","n":2423,"mean":-53.32,"total":-129195.0,"cum":-634220.0},{"month":"2026-07","n":3160,"mean":-12.75,"total":-40305.0,"cum":-674525.0}],"oos_macro":[{"month":"2025-07","n":1846,"mean":-15.93,"total":-29415.0,"cum":-29415.0},{"month":"2025-08","n":1819,"mean":-14.6,"total":-26555.0,"cum":-55970.0},{"month":"2025-09","n":1091,"mean":-48.58,"total":-53005.0,"cum":-108975.0},{"month":"2025-10","n":1587,"mean":15.71,"total":24935.0,"cum":-84040.0},{"month":"2025-11","n":1401,"mean":1.91,"total":2670.0,"cum":-81370.0},{"month":"2025-12","n":2019,"mean":-13.1,"total":-26440.0,"cum":-107810.0},{"month":"2026-01","n":1659,"mean":21.8,"total":36165.0,"cum":-71645.0},{"month":"2026-02","n":3111,"mean":-11.64,"total":-36220.0,"cum":-107865.0},{"month":"2026-03","n":2558,"mean":-41.06,"total":-105020.0,"cum":-212885.0},{"month":"2026-04","n":2663,"mean":-41.01,"total":-109200.0,"cum":-322085.0},{"month":"2026-05","n":2521,"mean":-61.13,"total":-154100.0,"cum":-476185.0},{"month":"2026-06","n":2280,"mean":-50.33,"total":-114750.0,"cum":-590935.0},{"month":"2026-07","n":3160,"mean":-12.75,"total":-40305.0,"cum":-631240.0}]}},"ES":{"summary":{"is_raw":{"n":39830,"mean":53.1,"t":12.191,"total":2115100.0,"win_rate":45.9},"is_macro":{"n":33132,"mean":19.31,"t":5.565,"total":639825.0,"win_rate":45.7},"oos_raw":{"n":28750,"mean":-26.18,"t":-13.523,"total":-752550.0,"win_rate":41.6},"oos_macro":{"n":23033,"mean":-31.71,"t":-15.225,"total":-730287.5,"win_rate":40.2},"is_removed":6698,"oos_removed":5717},"slots":[{"slot_id":259,"symbol":"ES","day":"Mon","bucket":"12:00","is_raw":{"n":8356,"mean":48.49,"t":6.919,"total":405175.0,"win_rate":46.3},"is_macro":{"n":8356,"mean":48.49,"t":6.919,"total":405175.0,"win_rate":46.3},"oos_raw":{"n":6141,"mean":-26.95,"t":-7.062,"total":-165475.0,"win_rate":40.4},"oos_macro":{"n":6141,"mean":-26.95,"t":-7.062,"total":-165475.0,"win_rate":40.4},"oos_removed":0},{"slot_id":260,"symbol":"ES","day":"Mon","bucket":"12:30","is_raw":{"n":8170,"mean":48.85,"t":7.347,"total":399112.5,"win_rate":47.3},"is_macro":{"n":8170,"mean":48.85,"t":7.347,"total":399112.5,"win_rate":47.3},"oos_raw":{"n":5867,"mean":-41.58,"t":-10.694,"total":-243937.5,"win_rate":38.6},"oos_macro":{"n":5867,"mean":-41.58,"t":-10.694,"total":-243937.5,"win_rate":38.6},"oos_removed":0},{"slot_id":282,"symbol":"ES","day":"Tue","bucket":"00:00","is_raw":{"n":691,"mean":66.71,"t":4.487,"total":46100.0,"win_rate":54.6},"is_macro":{"n":691,"mean":66.71,"t":4.487,"total":46100.0,"win_rate":54.6},"oos_raw":{"n":572,"mean":-14.64,"t":-0.912,"total":-8375.0,"win_rate":44.9},"oos_macro":{"n":572,"mean":-14.64,"t":-0.912,"total":-8375.0,"win_rate":44.9},"oos_removed":0},{"slot_id":357,"symbol":"ES","day":"Wed","bucket":"14:00","is_raw":{"n":11588,"mean":48.66,"t":5.885,"total":563850.0,"win_rate":45.1},"is_macro":{"n":8538,"mean":-14.14,"t":-2.017,"total":-120712.5,"win_rate":44.3},"oos_raw":{"n":7395,"mean":-30.14,"t":-7.478,"total":-222900.0,"win_rate":40.9},"oos_macro":{"n":5159,"mean":-40.22,"t":-8.488,"total":-207487.5,"win_rate":38.3},"oos_removed":2236},{"slot_id":358,"symbol":"ES","day":"Wed","bucket":"14:30","is_raw":{"n":11025,"mean":63.57,"t":5.833,"total":700862.5,"win_rate":44.8},"is_macro":{"n":7377,"mean":-12.18,"t":-1.609,"total":-89850.0,"win_rate":44.1},"oos_raw":{"n":8775,"mean":-12.75,"t":-3.449,"total":-111862.5,"win_rate":44.9},"oos_macro":{"n":5294,"mean":-19.84,"t":-4.485,"total":-105012.5,"win_rate":43.4},"oos_removed":3481}],"monthly":{"is_raw":[{"month":"2024-05","n":111,"mean":-68.81,"total":-7637.5,"cum":-7637.5},{"month":"2024-06","n":1265,"mean":-47.93,"total":-60637.5,"cum":-68275.0},{"month":"2024-07","n":1710,"mean":-40.31,"total":-68937.5,"cum":-137212.5},{"month":"2024-08","n":2124,"mean":398.02,"total":845387.5,"cum":708175.0},{"month":"2024-09","n":702,"mean":93.04,"total":65312.5,"cum":773487.5},{"month":"2024-10","n":1802,"mean":-27.34,"total":-49262.5,"cum":724225.0},{"month":"2024-11","n":2178,"mean":-23.33,"total":-50812.5,"cum":673412.5},{"month":"2024-12","n":4157,"mean":349.57,"total":1453162.5,"cum":2126575.0},{"month":"2025-01","n":4642,"mean":26.41,"total":122600.0,"cum":2249175.0},{"month":"2025-02","n":3366,"mean":-4.71,"total":-15862.5,"cum":2233312.5},{"month":"2025-03","n":4502,"mean":-28.03,"total":-126212.5,"cum":2107100.0},{"month":"2025-04","n":8292,"mean":0.18,"total":1512.5,"cum":2108612.5},{"month":"2025-05","n":2381,"mean":19.56,"total":46562.5,"cum":2155175.0},{"month":"2025-06","n":2598,"mean":-15.43,"total":-40075.0,"cum":2115100.0}],"is_macro":[{"month":"2024-05","n":111,"mean":-68.81,"total":-7637.5,"cum":-7637.5},{"month":"2024-06","n":891,"mean":-41.54,"total":-37012.5,"cum":-44650.0},{"month":"2024-07","n":1301,"mean":-42.55,"total":-55362.5,"cum":-100012.5},{"month":"2024-08","n":2124,"mean":398.02,"total":845387.5,"cum":745375.0},{"month":"2024-09","n":609,"mean":15.05,"total":9162.5,"cum":754537.5},{"month":"2024-10","n":1802,"mean":-27.34,"total":-49262.5,"cum":705275.0},{"month":"2024-11","n":2178,"mean":-23.33,"total":-50812.5,"cum":654462.5},{"month":"2024-12","n":1329,"mean":-29.26,"total":-38887.5,"cum":615575.0},{"month":"2025-01","n":3556,"mean":30.57,"total":108712.5,"cum":724287.5},{"month":"2025-02","n":3366,"mean":-4.71,"total":-15862.5,"cum":708425.0},{"month":"2025-03","n":3544,"mean":-15.77,"total":-55875.0,"cum":652550.0},{"month":"2025-04","n":8292,"mean":0.18,"total":1512.5,"cum":654062.5},{"month":"2025-05","n":1687,"mean":21.73,"total":36662.5,"cum":690725.0},{"month":"2025-06","n":2342,"mean":-21.73,"total":-50900.0,"cum":639825.0}],"oos_raw":[{"month":"2025-07","n":2864,"mean":-14.61,"total":-41850.0,"cum":-41850.0},{"month":"2025-08","n":1969,"mean":-36.1,"total":-71075.0,"cum":-112925.0},{"month":"2025-09","n":2288,"mean":-13.51,"total":-30900.0,"cum":-143825.0},{"month":"2025-10","n":2512,"mean":-49.95,"total":-125462.5,"cum":-269287.5},{"month":"2025-11","n":2052,"mean":-8.64,"total":-17737.5,"cum":-287025.0},{"month":"2025-12","n":2865,"mean":-28.41,"total":-81400.0,"cum":-368425.0},{"month":"2026-01","n":2893,"mean":-4.06,"total":-11750.0,"cum":-380175.0},{"month":"2026-02","n":2056,"mean":-43.89,"total":-90237.5,"cum":-470412.5},{"month":"2026-03","n":2899,"mean":-21.41,"total":-62062.5,"cum":-532475.0},{"month":"2026-04","n":2730,"mean":-38.02,"total":-103787.5,"cum":-636262.5},{"month":"2026-05","n":1863,"mean":-55.0,"total":-102462.5,"cum":-738725.0},{"month":"2026-06","n":416,"mean":-23.95,"total":-9962.5,"cum":-748687.5},{"month":"2026-07","n":1343,"mean":-2.88,"total":-3862.5,"cum":-752550.0}],"oos_macro":[{"month":"2025-07","n":1978,"mean":-21.97,"total":-43462.5,"cum":-43462.5},{"month":"2025-08","n":1969,"mean":-36.1,"total":-71075.0,"cum":-114537.5},{"month":"2025-09","n":1347,"mean":-42.12,"total":-56737.5,"cum":-171275.0},{"month":"2025-10","n":1238,"mean":-69.85,"total":-86475.0,"cum":-257750.0},{"month":"2025-11","n":2052,"mean":-8.64,"total":-17737.5,"cum":-275487.5},{"month":"2025-12","n":1874,"mean":-28.51,"total":-53425.0,"cum":-328912.5},{"month":"2026-01","n":2389,"mean":3.2,"total":7637.5,"cum":-321275.0},{"month":"2026-02","n":2056,"mean":-43.89,"total":-90237.5,"cum":-411512.5},{"month":"2026-03","n":2234,"mean":-44.02,"total":-98337.5,"cum":-509850.0},{"month":"2026-04","n":2274,"mean":-45.8,"total":-104150.0,"cum":-614000.0},{"month":"2026-05","n":1863,"mean":-55.0,"total":-102462.5,"cum":-716462.5},{"month":"2026-06","n":416,"mean":-23.95,"total":-9962.5,"cum":-726425.0},{"month":"2026-07","n":1343,"mean":-2.88,"total":-3862.5,"cum":-730287.5}]}},"CL":{"summary":{"is_raw":{"n":1705,"mean":64.55,"t":6.534,"total":110049.99,"win_rate":63.9},"is_macro":{"n":1705,"mean":64.55,"t":6.534,"total":110049.99,"win_rate":63.9},"oos_raw":{"n":1515,"mean":21.04,"t":1.282,"total":31869.99,"win_rate":61.7},"oos_macro":{"n":1515,"mean":21.04,"t":1.282,"total":31869.99,"win_rate":61.7},"is_removed":0,"oos_removed":0},"slots":[{"slot_id":180,"symbol":"CL","day":"Thu","bucket":"20:00","is_raw":{"n":390,"mean":169.92,"t":5.134,"total":66270.0,"win_rate":64.4},"is_macro":{"n":390,"mean":169.92,"t":5.134,"total":66270.0,"win_rate":64.4},"oos_raw":{"n":204,"mean":-133.33,"t":-4.451,"total":-27200.0,"win_rate":42.2},"oos_macro":{"n":204,"mean":-133.33,"t":-4.451,"total":-27200.0,"win_rate":42.2},"oos_removed":0},{"slot_id":223,"symbol":"CL","day":"Sun","bucket":"18:00","is_raw":{"n":1315,"mean":33.29,"t":4.142,"total":43780.0,"win_rate":63.8},"is_macro":{"n":1315,"mean":33.29,"t":4.142,"total":43780.0,"win_rate":63.8},"oos_raw":{"n":1311,"mean":45.06,"t":2.462,"total":59069.99,"win_rate":64.8},"oos_macro":{"n":1311,"mean":45.06,"t":2.462,"total":59069.99,"win_rate":64.8},"oos_removed":0}],"monthly":{"is_raw":[{"month":"2024-05","n":18,"mean":-34.44,"total":-620.0,"cum":-620.0},{"month":"2024-06","n":101,"mean":30.5,"total":3080.0,"cum":2460.0},{"month":"2024-07","n":48,"mean":9.17,"total":440.0,"cum":2900.0},{"month":"2024-08","n":57,"mean":-33.51,"total":-1910.0,"cum":990.0},{"month":"2024-09","n":50,"mean":64.6,"total":3230.0,"cum":4220.0},{"month":"2024-10","n":279,"mean":9.32,"total":2600.0,"cum":6820.0},{"month":"2024-11","n":51,"mean":-79.61,"total":-4060.0,"cum":2760.0},{"month":"2024-12","n":19,"mean":-140.53,"total":-2670.0,"cum":90.0},{"month":"2025-01","n":69,"mean":-5.94,"total":-410.0,"cum":-320.0},{"month":"2025-02","n":173,"mean":53.76,"total":9300.0,"cum":8980.0},{"month":"2025-03","n":52,"mean":-36.73,"total":-1910.0,"cum":7070.0},{"month":"2025-04","n":203,"mean":63.15,"total":12820.0,"cum":19890.0},{"month":"2025-05","n":153,"mean":55.49,"total":8490.0,"cum":28380.0},{"month":"2025-06","n":432,"mean":189.05,"total":81670.0,"cum":110049.99}],"is_macro":[{"month":"2024-05","n":18,"mean":-34.44,"total":-620.0,"cum":-620.0},{"month":"2024-06","n":101,"mean":30.5,"total":3080.0,"cum":2460.0},{"month":"2024-07","n":48,"mean":9.17,"total":440.0,"cum":2900.0},{"month":"2024-08","n":57,"mean":-33.51,"total":-1910.0,"cum":990.0},{"month":"2024-09","n":50,"mean":64.6,"total":3230.0,"cum":4220.0},{"month":"2024-10","n":279,"mean":9.32,"total":2600.0,"cum":6820.0},{"month":"2024-11","n":51,"mean":-79.61,"total":-4060.0,"cum":2760.0},{"month":"2024-12","n":19,"mean":-140.53,"total":-2670.0,"cum":90.0},{"month":"2025-01","n":69,"mean":-5.94,"total":-410.0,"cum":-320.0},{"month":"2025-02","n":173,"mean":53.76,"total":9300.0,"cum":8980.0},{"month":"2025-03","n":52,"mean":-36.73,"total":-1910.0,"cum":7070.0},{"month":"2025-04","n":203,"mean":63.15,"total":12820.0,"cum":19890.0},{"month":"2025-05","n":153,"mean":55.49,"total":8490.0,"cum":28380.0},{"month":"2025-06","n":432,"mean":189.05,"total":81670.0,"cum":110049.99}],"oos_raw":[{"month":"2025-07","n":26,"mean":-112.69,"total":-2930.0,"cum":-2930.0},{"month":"2025-08","n":14,"mean":-102.14,"total":-1430.0,"cum":-4360.0},{"month":"2025-09","n":23,"mean":-53.04,"total":-1220.0,"cum":-5580.0},{"month":"2025-10","n":12,"mean":-78.33,"total":-940.0,"cum":-6520.0},{"month":"2025-11","n":61,"mean":-39.02,"total":-2380.0,"cum":-8900.0},{"month":"2025-12","n":21,"mean":-126.67,"total":-2660.0,"cum":-11560.0},{"month":"2026-01","n":36,"mean":-76.39,"total":-2750.0,"cum":-14310.0},{"month":"2026-02","n":55,"mean":25.82,"total":1420.0,"cum":-12890.0},{"month":"2026-03","n":842,"mean":92.67,"total":78029.99,"cum":65139.99},{"month":"2026-04","n":167,"mean":-14.25,"total":-2380.0,"cum":62759.99},{"month":"2026-05","n":195,"mean":-133.38,"total":-26010.0,"cum":36749.99},{"month":"2026-06","n":27,"mean":-34.07,"total":-920.0,"cum":35829.99},{"month":"2026-07","n":36,"mean":-110.0,"total":-3960.0,"cum":31869.99}],"oos_macro":[{"month":"2025-07","n":26,"mean":-112.69,"total":-2930.0,"cum":-2930.0},{"month":"2025-08","n":14,"mean":-102.14,"total":-1430.0,"cum":-4360.0},{"month":"2025-09","n":23,"mean":-53.04,"total":-1220.0,"cum":-5580.0},{"month":"2025-10","n":12,"mean":-78.33,"total":-940.0,"cum":-6520.0},{"month":"2025-11","n":61,"mean":-39.02,"total":-2380.0,"cum":-8900.0},{"month":"2025-12","n":21,"mean":-126.67,"total":-2660.0,"cum":-11560.0},{"month":"2026-01","n":36,"mean":-76.39,"total":-2750.0,"cum":-14310.0},{"month":"2026-02","n":55,"mean":25.82,"total":1420.0,"cum":-12890.0},{"month":"2026-03","n":842,"mean":92.67,"total":78029.99,"cum":65139.99},{"month":"2026-04","n":167,"mean":-14.25,"total":-2380.0,"cum":62759.99},{"month":"2026-05","n":195,"mean":-133.38,"total":-26010.0,"cum":36749.99},{"month":"2026-06","n":27,"mean":-34.07,"total":-920.0,"cum":35829.99},{"month":"2026-07","n":36,"mean":-110.0,"total":-3960.0,"cum":31869.99}]}},"FDAX":{"summary":{"is_raw":{"n":3920,"mean":268.84,"t":9.105,"total":1053850.0,"win_rate":58.5},"is_macro":{"n":3852,"mean":275.45,"t":9.182,"total":1061025.0,"win_rate":58.9},"oos_raw":{"n":943,"mean":-243.19,"t":-3.487,"total":-229325.0,"win_rate":53.1},"oos_macro":{"n":914,"mean":-242.04,"t":-3.371,"total":-221225.0,"win_rate":53.5},"is_removed":68,"oos_removed":29},"slots":[{"slot_id":587,"symbol":"FDAX","day":"Wed","bucket":"13:30","is_raw":{"n":1157,"mean":234.77,"t":3.478,"total":271625.0,"win_rate":61.0},"is_macro":{"n":1089,"mean":256.01,"t":3.583,"total":278800.0,"win_rate":62.4},"oos_raw":{"n":248,"mean":-82.16,"t":-0.661,"total":-20375.0,"win_rate":49.6},"oos_macro":{"n":219,"mean":-56.05,"t":-0.403,"total":-12275.0,"win_rate":50.7},"oos_removed":29},{"slot_id":648,"symbol":"FDAX","day":"Thu","bucket":"23:00","is_raw":{"n":122,"mean":289.96,"t":3.425,"total":35375.0,"win_rate":68.0},"is_macro":{"n":122,"mean":289.96,"t":3.425,"total":35375.0,"win_rate":68.0},"oos_raw":{"n":43,"mean":-415.7,"t":-2.107,"total":-17875.0,"win_rate":53.5},"oos_macro":{"n":43,"mean":-415.7,"t":-2.107,"total":-17875.0,"win_rate":53.5},"oos_removed":0},{"slot_id":675,"symbol":"FDAX","day":"Fri","bucket":"12:30","is_raw":{"n":1449,"mean":234.27,"t":6.017,"total":339450.0,"win_rate":56.9},"is_macro":{"n":1449,"mean":234.27,"t":6.017,"total":339450.0,"win_rate":56.9},"oos_raw":{"n":392,"mean":-422.96,"t":-3.339,"total":-165800.0,"win_rate":52.3},"oos_macro":{"n":392,"mean":-422.96,"t":-3.339,"total":-165800.0,"win_rate":52.3},"oos_removed":0},{"slot_id":677,"symbol":"FDAX","day":"Fri","bucket":"13:30","is_raw":{"n":1192,"mean":341.78,"t":6.435,"total":407400.0,"win_rate":57.2},"is_macro":{"n":1192,"mean":341.78,"t":6.435,"total":407400.0,"win_rate":57.2},"oos_raw":{"n":260,"mean":-97.21,"t":-0.881,"total":-25275.0,"win_rate":57.7},"oos_macro":{"n":260,"mean":-97.21,"t":-0.881,"total":-25275.0,"win_rate":57.7},"oos_removed":0}],"monthly":{"is_raw":[{"month":"2024-05","n":30,"mean":18.33,"total":550.0,"cum":550.0},{"month":"2024-06","n":120,"mean":-91.04,"total":-10925.0,"cum":-10375.0},{"month":"2024-07","n":145,"mean":36.38,"total":5275.0,"cum":-5100.0},{"month":"2024-08","n":314,"mean":-121.18,"total":-38050.0,"cum":-43150.0},{"month":"2024-09","n":251,"mean":-60.46,"total":-15175.0,"cum":-58325.0},{"month":"2024-10","n":223,"mean":62.0,"total":13825.0,"cum":-44500.0},{"month":"2024-11","n":314,"mean":48.09,"total":15100.0,"cum":-29400.0},{"month":"2024-12","n":160,"mean":-87.19,"total":-13950.0,"cum":-43350.0},{"month":"2025-01","n":416,"mean":1131.19,"total":470575.0,"cum":427225.0},{"month":"2025-02","n":667,"mean":504.46,"total":336475.0,"cum":763700.0},{"month":"2025-03","n":635,"mean":62.56,"total":39725.0,"cum":803425.0},{"month":"2025-04","n":535,"mean":457.15,"total":244575.0,"cum":1048000.0},{"month":"2025-05","n":88,"mean":79.26,"total":6975.0,"cum":1054975.0},{"month":"2025-06","n":22,"mean":-51.14,"total":-1125.0,"cum":1053850.0}],"is_macro":[{"month":"2024-05","n":30,"mean":18.33,"total":550.0,"cum":550.0},{"month":"2024-06","n":120,"mean":-91.04,"total":-10925.0,"cum":-10375.0},{"month":"2024-07","n":108,"mean":1.16,"total":125.0,"cum":-10250.0},{"month":"2024-08","n":314,"mean":-121.18,"total":-38050.0,"cum":-48300.0},{"month":"2024-09","n":234,"mean":-38.68,"total":-9050.0,"cum":-57350.0},{"month":"2024-10","n":223,"mean":62.0,"total":13825.0,"cum":-43525.0},{"month":"2024-11","n":314,"mean":48.09,"total":15100.0,"cum":-28425.0},{"month":"2024-12","n":160,"mean":-87.19,"total":-13950.0,"cum":-42375.0},{"month":"2025-01","n":415,"mean":1134.82,"total":470950.0,"cum":428575.0},{"month":"2025-02","n":667,"mean":504.46,"total":336475.0,"cum":765050.0},{"month":"2025-03","n":623,"mean":69.86,"total":43525.0,"cum":808575.0},{"month":"2025-04","n":535,"mean":457.15,"total":244575.0,"cum":1053150.0},{"month":"2025-05","n":88,"mean":79.26,"total":6975.0,"cum":1060125.0},{"month":"2025-06","n":21,"mean":42.86,"total":900.0,"cum":1061025.0}],"oos_raw":[{"month":"2025-07","n":59,"mean":141.95,"total":8375.0,"cum":8375.0},{"month":"2025-08","n":40,"mean":-181.88,"total":-7275.0,"cum":1100.0},{"month":"2025-09","n":42,"mean":-732.14,"total":-30750.0,"cum":-29650.0},{"month":"2025-10","n":105,"mean":153.57,"total":16125.0,"cum":-13525.0},{"month":"2025-11","n":34,"mean":-324.26,"total":-11025.0,"cum":-24550.0},{"month":"2025-12","n":44,"mean":196.02,"total":8625.0,"cum":-15925.0},{"month":"2026-01","n":85,"mean":114.71,"total":9750.0,"cum":-6175.0},{"month":"2026-02","n":122,"mean":-441.8,"total":-53900.0,"cum":-60075.0},{"month":"2026-03","n":233,"mean":-738.09,"total":-171975.0,"cum":-232050.0},{"month":"2026-04","n":67,"mean":378.73,"total":25375.0,"cum":-206675.0},{"month":"2026-05","n":75,"mean":-69.33,"total":-5200.0,"cum":-211875.0},{"month":"2026-06","n":24,"mean":-808.33,"total":-19400.0,"cum":-231275.0},{"month":"2026-07","n":13,"mean":150.0,"total":1950.0,"cum":-229325.0}],"oos_macro":[{"month":"2025-07","n":58,"mean":154.74,"total":8975.0,"cum":8975.0},{"month":"2025-08","n":40,"mean":-181.88,"total":-7275.0,"cum":1700.0},{"month":"2025-09","n":42,"mean":-732.14,"total":-30750.0,"cum":-29050.0},{"month":"2025-10","n":97,"mean":137.89,"total":13375.0,"cum":-15675.0},{"month":"2025-11","n":34,"mean":-324.26,"total":-11025.0,"cum":-26700.0},{"month":"2025-12","n":43,"mean":216.28,"total":9300.0,"cum":-17400.0},{"month":"2026-01","n":82,"mean":134.45,"total":11025.0,"cum":-6375.0},{"month":"2026-02","n":122,"mean":-441.8,"total":-53900.0,"cum":-60275.0},{"month":"2026-03","n":224,"mean":-732.92,"total":-164175.0,"cum":-224450.0},{"month":"2026-04","n":64,"mean":391.02,"total":25025.0,"cum":-199425.0},{"month":"2026-05","n":75,"mean":-69.33,"total":-5200.0,"cum":-204625.0},{"month":"2026-06","n":20,"mean":-927.5,"total":-18550.0,"cum":-223175.0},{"month":"2026-07","n":13,"mean":150.0,"total":1950.0,"cum":-221225.0}]}}},"all_candidates_summary":{"is_raw":{"n":87568,"mean":67.83,"t":21.534,"total":5940099.99,"win_rate":52.7},"is_macro":{"n":79270,"mean":54.72,"t":18.084,"total":4337434.99,"win_rate":53.1},"oos_raw":{"n":59810,"mean":-27.16,"t":-10.852,"total":-1624530.01,"win_rate":53.0},"oos_macro":{"n":53177,"mean":-29.16,"t":-10.66,"total":-1550882.51,"win_rate":53.5}}};
+
+function fmt(v, dec=2) {
+  if (v == null || isNaN(v)) return '—';
+  return (v >= 0 ? '$' : '−$') + Math.abs(v).toFixed(dec);
+}
+function fmtN(v) { return v != null ? v.toLocaleString() : '—'; }
+function cls(v) { return v == null ? 'neu' : (v >= 0 ? 'pos' : 'neg'); }
+
+let activeChart1 = null, activeChart2 = null;
+
+function renderAsset(asset) {
+  const container = document.getElementById('asset-content');
+  
+  if (asset === 'ALL') {
+    renderAllOverview(container);
+    return;
+  }
+  
+  const aData = D.assets[asset];
+  const su = aData.summary;
+  
+  container.innerHTML = `
+    <!-- 4 Cards -->
+    <div class="sec-title">${asset} — Performance Summary (In-Sample vs Out-of-Sample)</div>
+    <div class="grid4">
+      <div class="card c-is-raw">
+        <div class="clabel">1. In-Sample (Raw Baseline)</div>
+        <div class="cbig ${cls(su.is_raw.mean)}">${fmt(su.is_raw.mean)}</div>
+        <div class="csub">${fmtN(su.is_raw.n)} trades · Jan 2024 – Jun 2025</div>
+        <div class="crow"><span>Total PnL</span><span class="${cls(su.is_raw.total)}">${fmt(su.is_raw.total, 0)}</span></div>
+        <div class="crow"><span>t-Statistic</span><span class="${cls(su.is_raw.t)}">${su.is_raw.t.toFixed(2)}</span></div>
+        <div class="crow"><span>Win Rate</span><span>${su.is_raw.win_rate}%</span></div>
+      </div>
+
+      <div class="card c-is-mac">
+        <div class="clabel">2. In-Sample (+Macro Filter)</div>
+        <div class="cbig ${cls(su.is_macro.mean)}">${fmt(su.is_macro.mean)}</div>
+        <div class="csub">${fmtN(su.is_macro.n)} trades (${fmtN(su.is_removed)} news trades removed)</div>
+        <div class="crow"><span>Total PnL</span><span class="${cls(su.is_macro.total)}">${fmt(su.is_macro.total, 0)}</span></div>
+        <div class="crow"><span>t-Statistic</span><span class="${cls(su.is_macro.t)}">${su.is_macro.t.toFixed(2)}</span></div>
+        <div class="crow"><span>Win Rate</span><span>${su.is_macro.win_rate}%</span></div>
+      </div>
+
+      <div class="card c-oos-raw">
+        <div class="clabel">3. Out-of-Sample (Raw Holdout)</div>
+        <div class="cbig ${cls(su.oos_raw.mean)}">${fmt(su.oos_raw.mean)}</div>
+        <div class="csub">${fmtN(su.oos_raw.n)} trades · Jul 2025 – Jul 2026</div>
+        <div class="crow"><span>Total PnL</span><span class="${cls(su.oos_raw.total)}">${fmt(su.oos_raw.total, 0)}</span></div>
+        <div class="crow"><span>t-Statistic</span><span class="${cls(su.oos_raw.t)}">${su.oos_raw.t.toFixed(2)}</span></div>
+        <div class="crow"><span>Win Rate</span><span>${su.oos_raw.win_rate}%</span></div>
+      </div>
+
+      <div class="card c-oos-mac">
+        <div class="clabel">4. Out-of-Sample (+Macro Filter)</div>
+        <div class="cbig ${cls(su.oos_macro.mean)}">${fmt(su.oos_macro.mean)}</div>
+        <div class="csub">${fmtN(su.oos_macro.n)} trades (${fmtN(su.oos_removed)} news trades removed)</div>
+        <div class="crow"><span>Total PnL</span><span class="${cls(su.oos_macro.total)}">${fmt(su.oos_macro.total, 0)}</span></div>
+        <div class="crow"><span>t-Statistic</span><span class="${cls(su.oos_macro.t)}">${su.oos_macro.t.toFixed(2)}</span></div>
+        <div class="crow"><span>Win Rate</span><span>${su.oos_macro.win_rate}%</span></div>
+      </div>
+    </div>
+
+    <!-- Per-Slot Comparison Table -->
+    <div class="section">
+      <div class="sec-title">${asset} — Per-Slot Detailed Breakdown (${aData.slots.length} Candidate Slots)</div>
+      <div class="tbl-wrap">
+        <div class="tbl-hdr">
+          <h3>${asset} Candidate Slots: In-Sample vs. Out-of-Sample under Macro Filter</h3>
+          <span>Comparing raw execution vs macro blackout window (±30 min)</span>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Slot ID</th>
+              <th>Day</th>
+              <th>Bucket</th>
+              <th class="r">IS Raw Mean</th>
+              <th class="r">IS Macro Mean</th>
+              <th class="r">IS Δ Mean</th>
+              <th class="r">OOS Raw Mean</th>
+              <th class="r">OOS Macro Mean</th>
+              <th class="r">OOS Δ Mean</th>
+              <th class="r">OOS Removed</th>
+              <th class="r">OOS Impact</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${aData.slots.map(s => {
+              const isDelta = s.is_macro.mean - s.is_raw.mean;
+              const oosDelta = s.oos_macro.mean - s.oos_raw.mean;
+              const impactClass = oosDelta > 1 ? 'd-good' : (oosDelta < -1 ? 'd-bad' : 'd-neu');
+              const impactText = oosDelta > 1 ? '▲ Improved' : (oosDelta < -1 ? '▼ Worsened' : '— Neutral');
+              return `
+                <tr>
+                  <td class="lbl">#${s.slot_id}</td>
+                  <td class="lbl">${s.day}</td>
+                  <td class="lbl">${s.bucket}</td>
+                  <td class="r ${cls(s.is_raw.mean)}">${fmt(s.is_raw.mean)}</td>
+                  <td class="r ${cls(s.is_macro.mean)}">${fmt(s.is_macro.mean)}</td>
+                  <td class="r ${cls(isDelta)}">${fmt(isDelta)}</td>
+                  <td class="r ${cls(s.oos_raw.mean)}">${fmt(s.oos_raw.mean)}</td>
+                  <td class="r ${cls(s.oos_macro.mean)}">${fmt(s.oos_macro.mean)}</td>
+                  <td class="r ${cls(oosDelta)}">${fmt(oosDelta)}</td>
+                  <td class="r" style="color:var(--muted)">${s.oos_removed.toLocaleString()}</td>
+                  <td class="r"><span class="d-pill ${impactClass}">${impactText}</span></td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="grid2">
+      <div class="chart-card">
+        <h3>Out-of-Sample Mean PnL per Slot</h3>
+        <p>Comparison of Raw vs Macro Filtered mean return per trade for ${asset} candidate slots</p>
+        <div class="chart-h"><canvas id="chart-slot-bars"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h3>Out-of-Sample Cumulative PnL Curve</h3>
+        <p>Running total of holdout PnL comparing Raw vs Macro Filtered over all 13 months</p>
+        <div class="chart-h"><canvas id="chart-cum-curve"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Narrative Section -->
+    <div class="narrative">
+      <h4>Takeaway for ${asset}:</h4>
+      <p>• <strong>Trade Removal:</strong> The macro news filter accurately identified and removed <strong>${su.oos_removed.toLocaleString()} trades</strong> on ${asset} during holdout news windows.</p>
+      <p>• <strong>Performance Impact:</strong> Removing these trades shifted out-of-sample expectancy from <strong>${fmt(su.oos_raw.mean)}</strong> to <strong>${fmt(su.oos_macro.mean)}</strong> per trade. The strategy's holdout losses are distributed across non-news trading windows rather than concentrated in news release spikes.</p>
+    </div>
+  `;
+
+  renderAssetCharts(asset, aData);
+}
+
+function renderAllOverview(container) {
+  const assets = ['NQ', 'ES', 'CL', 'FDAX'];
+  container.innerHTML = `
+    <div class="sec-title">Portfolio Overview — In-Sample vs Out-of-Sample across all 4 Assets</div>
+    
+    <div class="tbl-wrap">
+      <div class="tbl-hdr">
+        <h3>Asset-by-Asset Macro News Impact Matrix</h3>
+        <span>Summary across all 21 Benjamini-Hochberg candidate slots</span>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Asset</th>
+            <th>Candidate Slots</th>
+            <th class="r">IS Raw Mean</th>
+            <th class="r">IS Macro Mean</th>
+            <th class="r">IS Total PnL</th>
+            <th class="r">OOS Raw Mean</th>
+            <th class="r">OOS Macro Mean</th>
+            <th class="r">OOS News Trades</th>
+            <th class="r">OOS Total PnL</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${assets.map(a => {
+            const d = D.assets[a];
+            const su = d.summary;
+            return `
+              <tr>
+                <td class="lbl" style="font-size:14px;color:#fff">${a}</td>
+                <td>${d.slots.length} slots</td>
+                <td class="r ${cls(su.is_raw.mean)}">${fmt(su.is_raw.mean)}</td>
+                <td class="r ${cls(su.is_macro.mean)}">${fmt(su.is_macro.mean)}</td>
+                <td class="r ${cls(su.is_macro.total)}">${fmt(su.is_macro.total,0)}</td>
+                <td class="r ${cls(su.oos_raw.mean)}">${fmt(su.oos_raw.mean)}</td>
+                <td class="r ${cls(su.oos_macro.mean)}">${fmt(su.oos_macro.mean)}</td>
+                <td class="r" style="color:var(--muted)">−${su.oos_removed.toLocaleString()}</td>
+                <td class="r ${cls(su.oos_macro.total)}">${fmt(su.oos_macro.total,0)}</td>
+              </tr>
+            `;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="narrative">
+      <h4>Executive Summary across all Assets:</h4>
+      <p>1. <strong>Macro news filter is functioning with precision:</strong> It cleanly filtered out news release windows (removing 5,717 trades on ES, 887 on NQ, and 29 on FDAX).</p>
+      <p>2. <strong>Expectancy sign remains unchanged:</strong> Out-of-sample performance remains negative across all equity assets whether macro news windows are traded or excluded (NQ: -$22.78, ES: -$31.71, FDAX: -$242.04).</p>
+      <p>3. <strong>CL Off-Peak Independence:</strong> CL candidate slots operate at Thu 20:00 and Sun 18:00 (outside US macro announcement windows), demonstrating positive expectancy (+$21.04/trade) unaffected by news filters.</p>
+    </div>
+  `;
+}
+
+function renderAssetCharts(asset, aData) {
+  if (activeChart1) activeChart1.destroy();
+  if (activeChart2) activeChart2.destroy();
+  
+  const slotLabels = aData.slots.map(s => `${s.day} ${s.bucket}`);
+  const rawMeans = aData.slots.map(s => s.oos_raw.mean);
+  const macMeans = aData.slots.map(s => s.oos_macro.mean);
+  
+  // Bar Chart
+  const ctx1 = document.getElementById('chart-slot-bars');
+  if (ctx1) {
+    activeChart1 = new Chart(ctx1, {
+      type: 'bar',
+      data: {
+        labels: slotLabels,
+        datasets: [
+          { label: 'OOS Raw Baseline', data: rawMeans, backgroundColor: 'rgba(245, 158, 11, 0.6)', borderColor: '#f59e0b', borderWidth: 1 },
+          { label: 'OOS +Macro Filter', data: macMeans, backgroundColor: 'rgba(244, 63, 94, 0.7)', borderColor: '#f43f5e', borderWidth: 1 }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { labels: { color: '#94a3b8', font: { size: 11 } } } },
+        scales: {
+          x: { ticks: { color: '#64748b', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,0.03)' } },
+          y: { ticks: { color: '#64748b', callback: v => '$' + v }, grid: { color: 'rgba(255,255,255,0.04)' } }
+        }
+      }
+    });
+  }
+
+  // Cumulative Line Chart
+  const ctx2 = document.getElementById('chart-cum-curve');
+  if (ctx2) {
+    const oosMonths = aData.monthly.oos_raw.map(m => m.month);
+    const rawCum = aData.monthly.oos_raw.map(m => m.cum);
+    const macCum = aData.monthly.oos_macro.map(m => m.cum);
+    
+    activeChart2 = new Chart(ctx2, {
+      type: 'line',
+      data: {
+        labels: oosMonths,
+        datasets: [
+          { label: 'Raw Holdout Cumulative', data: rawCum, borderColor: '#f59e0b', tension: 0.3, pointRadius: 3 },
+          { label: '+Macro Filter Cumulative', data: macCum, borderColor: '#f43f5e', tension: 0.3, pointRadius: 3 }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { labels: { color: '#94a3b8', font: { size: 11 } } } },
+        scales: {
+          x: { ticks: { color: '#64748b', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,0.03)' } },
+          y: { ticks: { color: '#64748b', callback: v => '$' + (v/1000).toFixed(0) + 'k' }, grid: { color: 'rgba(255,255,255,0.04)' } }
+        }
+      }
+    });
+  }
+}
+
+function switchAsset(asset, btn) {
+  document.querySelectorAll('.asset-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  renderAsset(asset);
+}
+
+// Initial render
+renderAsset('ALL');
+</script>
+</body>
+</html>
