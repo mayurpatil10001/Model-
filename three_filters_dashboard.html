@@ -123,6 +123,21 @@ td .neu2{color:var(--muted);font-size:10px;font-weight:700}
 .legend-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted)}
 .legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
 
+/* Matrix */
+.matrix-wrap{overflow-x:auto;border-radius:10px;border:1px solid var(--border)}
+.matrix-tbl{border-collapse:collapse;width:100%;min-width:700px}
+.matrix-tbl thead tr{background:#0d1120;position:sticky;top:0;z-index:3}
+.matrix-tbl th{padding:10px 14px;font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);white-space:nowrap;text-align:center}
+.matrix-tbl th.left-align{text-align:left}
+.matrix-tbl td{padding:10px 12px;text-align:center;font-family:var(--mono);font-size:12px;font-weight:600;border:1px solid rgba(255,255,255,0.04);position:relative;transition:filter .15s}
+.matrix-tbl td.slot-label{text-align:left;font-family:var(--sans);font-weight:600;font-size:12px;color:var(--text);background:#0d1120;position:sticky;left:0;z-index:2;min-width:160px;padding-left:14px}
+.matrix-tbl tbody tr:hover td{filter:brightness(1.15)}
+.matrix-tbl td.empty{background:#0d1120;color:var(--muted);font-size:11px}
+.color-scale{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+.scale-bar{height:16px;width:280px;border-radius:4px;background:linear-gradient(to right,#7f1d1d,#dc2626,#f97316,rgba(255,255,255,0.06),#16a34a,#166534);flex-shrink:0}
+.scale-label{font-size:11px;color:var(--muted)}
+.metric-note{font-size:11px;color:var(--muted);margin-top:8px;margin-bottom:20px}
+
 @media(max-width:1100px){.cards5{grid-template-columns:repeat(3,1fr)}.stat-strip{grid-template-columns:repeat(3,1fr)}.grid2{grid-template-columns:1fr}.find-grid{grid-template-columns:1fr}}
 @media(max-width:700px){.cards5{grid-template-columns:1fr 1fr}.stat-strip{grid-template-columns:1fr 1fr}.grid3{grid-template-columns:1fr}}
 </style>
@@ -144,6 +159,7 @@ td .neu2{color:var(--muted);font-size:10px;font-weight:700}
   <button class="nav-tab active" onclick="showPanel('overview',this)">Overview</button>
   <button class="nav-tab" onclick="showPanel('monthly',this)">Monthly Detail</button>
   <button class="nav-tab" onclick="showPanel('perslot',this)">Per-Slot Detail</button>
+  <button class="nav-tab" onclick="showPanel('matrix',this)">Matrix Comparison</button>
   <button class="nav-tab" onclick="showPanel('bootstrap',this)">Bootstrap Analysis</button>
   <button class="nav-tab" onclick="showPanel('combo',this)">Combination Results</button>
   <button class="nav-tab" onclick="showPanel('findings',this)">Study Findings</button>
@@ -263,6 +279,26 @@ td .neu2{color:var(--muted);font-size:10px;font-weight:700}
         <tbody id="pivot-tbody"></tbody>
       </table>
     </div>
+  </div>
+</div>
+
+<!-- ───────────────────────── MATRIX ─────────────────────────────── -->
+<div id="panel-matrix" class="panel">
+  <div class="section">
+    <div class="sec-title">Heatmap Matrix — All Slots × All Scenarios</div>
+    <div class="stab-row">
+      <button class="stab active" onclick="switchMetric('mean',this)">Mean PnL / Trade</button>
+      <button class="stab" onclick="switchMetric('tstat',this)">t-Statistic</button>
+      <button class="stab" onclick="switchMetric('delta',this)">Δ vs Unfiltered Baseline</button>
+    </div>
+    <div class="color-scale">
+      <span class="scale-label">More negative</span>
+      <div class="scale-bar"></div>
+      <span class="scale-label">More positive</span>
+    </div>
+    <div id="matrix-note" class="metric-note">Cell colour: red = negative mean PnL (deeper red = more negative), green = positive. Value shown: mean PnL per trade in USD.</div>
+    <div class="matrix-wrap" id="matrix-tbl-wrap"></div>
+    <p style="font-size:11px;color:var(--muted);margin-top:12px">N/A cells: FDAX slots are not applicable for VWAP and Combo scenarios (no VWAP data available for that instrument). Slot 223 (CL Sun 18:00) has zero Combo trades. Rows sorted by symbol (ES→NQ→CL→FDAX) then day-of-week then bucket.</p>
   </div>
 </div>
 
@@ -797,6 +833,85 @@ function buildCombo(){
 }
 
 // ─────────────────────────────────────────────────────────────────────────
+// MATRIX COMPARISON
+// ─────────────────────────────────────────────────────────────────────────
+const MATRIX_SCENARIOS=['unfiltered','macro','vix','vwap','combo'];
+const MATRIX_LABELS=['Unfiltered','Macro','VIX','VWAP','Combo'];
+const MATRIX_COLORS=['#475569','#d97706','#7c3aed','#2563eb','#c026d3'];
+
+function heatColor(v,metric,min,max){
+  if(v==null)return '#0d1120';
+  if(metric==='tstat'){
+    // t-stat: positive = green, negative = red, 0=neutral
+    const intensity=Math.min(Math.abs(v)/8,1);
+    if(v>0)return `rgba(22,163,74,${0.15+intensity*0.65})`;
+    return `rgba(220,38,38,${0.15+intensity*0.65})`;
+  }
+  if(metric==='delta'){
+    // delta: positive = green, negative = red
+    const intensity=Math.min(Math.abs(v)/120,1);
+    if(v>0)return `rgba(22,163,74,${0.15+intensity*0.7})`;
+    return `rgba(220,38,38,${0.15+intensity*0.7})`;
+  }
+  // mean PnL: range typically -200 to +50
+  if(v>=0)return `rgba(22,163,74,${Math.min(0.15+v/80,0.85)})`;
+  const intensity=Math.min(Math.abs(v)/150,1);
+  return `rgba(220,38,38,${0.12+intensity*0.75})`;
+}
+
+function buildMatrix(metric){
+  // Lookup all slot data per scenario
+  const lookup={};
+  MATRIX_SCENARIOS.forEach(k=>{lookup[k]={}; D[k].slots.forEach(s=>{lookup[k][s.slot_id]=s;});});
+  const baseSlots=[...D.unfiltered.slots].sort((a,b)=>{
+    const si=(s)=>({ES:0,NQ:1,CL:2,FDAX:3}[s.symbol]||9);
+    const di=(s)=>({Mon:0,Tue:1,Wed:2,Thu:3,Fri:4,Sat:5,Sun:6}[s.day]||9);
+    return si(a)-si(b)||di(a)-di(b)||a.bucket.localeCompare(b.bucket);
+  });
+
+  let html='<table class="matrix-tbl"><thead><tr>';
+  html+='<th class="left-align">Slot</th>';
+  MATRIX_LABELS.forEach((l,i)=>{
+    html+=`<th style="color:${MATRIX_COLORS[i]}">${l}</th>`;
+  });
+  html+='</tr></thead><tbody>';
+
+  baseSlots.forEach(base=>{
+    const sid=base.slot_id;
+    html+=`<tr><td class="slot-label">${base.symbol} ${base.day} ${base.bucket} <span style="color:var(--muted);font-size:10px">#${sid}</span></td>`;
+    MATRIX_SCENARIOS.forEach((k,ki)=>{
+      const s=lookup[k][sid];
+      if(!s){html+='<td class="empty">N/A</td>';return;}
+      let val,disp;
+      if(metric==='mean'){val=s.mean;disp=val!=null?fmt(val):'—';}
+      else if(metric==='tstat'){val=s.t;disp=val!=null?val.toFixed(3):'—';}
+      else{ // delta vs baseline
+        const base2=lookup['unfiltered'][sid];
+        val=(s.mean!=null&&base2&&base2.mean!=null)?s.mean-base2.mean:null;
+        disp=val!=null?fmt(val):'—';
+      }
+      const bg=heatColor(val,metric);
+      html+=`<td style="background:${bg}">${disp}</td>`;
+    });
+    html+='</tr>';
+  });
+  html+='</tbody></table>';
+  document.getElementById('matrix-tbl-wrap').innerHTML=html;
+}
+
+let curMetric='mean';
+function switchMetric(m,btn){
+  curMetric=m;
+  document.querySelectorAll('#panel-matrix .stab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  const notes={mean:'Cell colour: red = negative mean PnL (deeper red = more negative), green = positive. Value shown: mean PnL per trade in USD.',
+    tstat:'Cell colour: red = negative t-statistic (strategy underperforms zero), green = positive. Value shown: t-statistic (Bonferroni family size = 21).',
+    delta:'Cell colour: green = filter improved mean PnL vs unfiltered baseline, red = filter worsened it. Unfiltered column shows zero by definition. Value shown: Δ mean PnL (filtered minus unfiltered).' };
+  document.getElementById('matrix-note').textContent=notes[m];
+  buildMatrix(m);
+}
+
+// ─────────────────────────────────────────────────────────────────────────
 // INIT
 // ─────────────────────────────────────────────────────────────────────────
 buildOverviewCards();
@@ -809,6 +924,7 @@ buildPivotTable();
 buildBootstrapTable();
 buildBootCharts();
 buildCombo();
+buildMatrix('mean');
 </script>
 </body>
 </html>
