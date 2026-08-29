@@ -1,0 +1,833 @@
+{
+  "assets": {
+    "NQ": {
+      "summary": {
+        "is_unfiltered": {
+          "n": 42113,
+          "mean": 63.19,
+          "t": 14.842,
+          "total": 2661100.0,
+          "win_rate": 58.2
+        },
+        "is_macro": {
+          "n": 40581,
+          "mean": 62.26,
+          "t": 14.479,
+          "total": 2526535.0,
+          "win_rate": 58.2
+        },
+        "oos_unfiltered": {
+          "n": 28602,
+          "mean": -23.58,
+          "t": -5.636,
+          "total": -674525.0,
+          "win_rate": 63.9
+        },
+        "oos_macro": {
+          "n": 27715,
+          "mean": -22.78,
+          "t": -5.355,
+          "total": -631240.0,
+          "win_rate": 64.1
+        }
+      },
+      "candidate_slots": [
+        {
+          "slot_id": 712,
+          "day": "Mon",
+          "bucket": "09:30",
+          "is_unfiltered": {
+            "n": 7020,
+            "mean": 47.12,
+            "t": 5.37,
+            "total": 330760.0,
+            "win_rate": 58.3
+          },
+          "is_macro": {
+            "n": 5961,
+            "mean": 35.55,
+            "t": 4.363,
+            "total": 211940.0,
+            "win_rate": 57.5
+          },
+          "oos_unfiltered": {
+            "n": 4955,
+            "mean": -42.86,
+            "t": -5.061,
+            "total": -212360.0,
+            "win_rate": 62.2
+          },
+          "oos_macro": {
+            "n": 4299,
+            "mean": -33.88,
+            "t": -3.721,
+            "total": -145665.0,
+            "win_rate": 62.7
+          }
+        },
+        {
+          "slot_id": 714,
+          "day": "Mon",
+          "bucket": "10:30",
+          "is_unfiltered": {
+            "n": 3414,
+            "mean": 57.9,
+            "t": 4.489,
+            "total": 197660.0,
+            "win_rate": 61.4
+          },
+          "is_macro": {
+            "n": 3414,
+            "mean": 57.9,
+            "t": 4.489,
+            "total": 197660.0,
+            "win_rate": 61.4
+          },
+          "oos_unfiltered": {
+            "n": 2476,
+            "mean": -17.51,
+            "t": -1.45,
+            "total": -43345.0,
+            "win_rate": 62.9
+          },
+          "oos_macro": {
+            "n": 2476,
+            "mean": -17.51,
+            "t": -1.45,
+            "total": -43345.0,
+            "win_rate": 62.9
+          }
+        },
+        {
+          "slot_id": 715,
+          "day": "Mon",
+          "bucket": "11:00",
+          "is_unfiltered": {
+            "n": 2724,
+            "mean": 65.68,
+            "t": 3.496,
+            "total": 178900.0,
+            "win_rate": 59.4
+          },
+          "is_macro": {
+            "n": 2724,
+            "mean": 65.68,
+            "t": 3.496,
+            "total": 178900.0,
+            "win_rate": 59.4
+          },
+          "oos_unfiltered": {
+            "n": 1941,
+            "mean": -81.37,
+            "t": -6.169,
+            "total": -157940.0,
+            "win_rate": 60.9
+          },
+          "oos_macro": {
+            "n": 1941,
+            "mean": -81.37,
+            "t": -6.169,
+            "total": -157940.0,
+            "win_rate": 60.9
+          }
+        },
+        {
+          "slot_id": 716,
+          "day": "Mon",
+          "bucket": "11:30",
+          "is_unfiltered": {
+            "n": 2757,
+            "mean": 171.66,
+            "t": 6.073,
+            "total": 473275.0,
+            "win_rate": 61.5
+          },
+          "is_macro": {
+            "n": 2757,
+            "mean": 171.66,
+            "t": 6.073,
+            "total": 473275.0,
+            "win_rate": 61.5
+          },
+          "oos_unfiltered": {
+            "n": 1688,
+            "mean": -67.73,
+            "t": -4.838,
+            "total": -114325.0,
+            "win_rate": 61.2
+          },
+          "oos_macro": {
+            "n": 1688,
+            "mean": -67.73,
+            "t": -4.838,
+            "total": -114325.0,
+            "win_rate": 61.2
+          }
+        },
+        {
+          "slot_id": 718,
+          "day": "Mon",
+          "bucket": "12:30",
+          "is_unfiltered": {
+            "n": 2702,
+            "mean": 108.51,
+            "t": 5.898,
+            "total": 293200.0,
+            "win_rate": 62.3
+          },
+          "is_macro": {
+            "n": 2702,
+            "mean": 108.51,
+            "t": 5.898,
+            "total": 293200.0,
+            "win_rate": 62.3
+          },
+          "oos_unfiltered": {
+            "n": 1681,
+            "mean": -12.05,
+            "t": -0.839,
+            "total": -20260.0,
+            "win_rate": 67.9
+          },
+          "oos_macro": {
+            "n": 1681,
+            "mean": -12.05,
+            "t": -0.839,
+            "total": -20260.0,
+            "win_rate": 67.9
+          }
+        },
+        {
+          "slot_id": 719,
+          "day": "Mon",
+          "bucket": "13:00",
+          "is_unfiltered": {
+            "n": 2433,
+            "mean": 156.22,
+            "t": 5.496,
+            "total": 380090.0,
+            "win_rate": 62.9
+          },
+          "is_macro": {
+            "n": 2433,
+            "mean": 156.22,
+            "t": 5.496,
+            "total": 380090.0,
+            "win_rate": 62.9
+          },
+          "oos_unfiltered": {
+            "n": 1463,
+            "mean": -8.08,
+            "t": -0.646,
+            "total": -11815.0,
+            "win_rate": 67.1
+          },
+          "oos_macro": {
+            "n": 1463,
+            "mean": -8.08,
+            "t": -0.646,
+            "total": -11815.0,
+            "win_rate": 67.1
+          }
+        },
+        {
+          "slot_id": 854,
+          "day": "Thu",
+          "bucket": "09:30",
+          "is_unfiltered": {
+            "n": 9177,
+            "mean": 33.15,
+            "t": 4.017,
+            "total": 304200.0,
+            "win_rate": 53.4
+          },
+          "is_macro": {
+            "n": 8941,
+            "mean": 31.47,
+            "t": 3.797,
+            "total": 281390.0,
+            "win_rate": 53.4
+          },
+          "oos_unfiltered": {
+            "n": 5565,
+            "mean": -14.9,
+            "t": -1.409,
+            "total": -82905.0,
+            "win_rate": 64.5
+          },
+          "oos_macro": {
+            "n": 5424,
+            "mean": -15.32,
+            "t": -1.417,
+            "total": -83095.0,
+            "win_rate": 64.7
+          }
+        },
+        {
+          "slot_id": 863,
+          "day": "Thu",
+          "bucket": "14:00",
+          "is_unfiltered": {
+            "n": 3117,
+            "mean": 71.81,
+            "t": 7.162,
+            "total": 223845.0,
+            "win_rate": 55.8
+          },
+          "is_macro": {
+            "n": 3111,
+            "mean": 72.22,
+            "t": 7.19,
+            "total": 224665.0,
+            "win_rate": 55.8
+          },
+          "oos_unfiltered": {
+            "n": 1925,
+            "mean": 23.01,
+            "t": 1.448,
+            "total": 44300.0,
+            "win_rate": 68.0
+          },
+          "oos_macro": {
+            "n": 1925,
+            "mean": 23.01,
+            "t": 1.448,
+            "total": 44300.0,
+            "win_rate": 68.0
+          }
+        },
+        {
+          "slot_id": 901,
+          "day": "Fri",
+          "bucket": "09:30",
+          "is_unfiltered": {
+            "n": 6415,
+            "mean": 22.38,
+            "t": 3.091,
+            "total": 143570.0,
+            "win_rate": 57.5
+          },
+          "is_macro": {
+            "n": 6184,
+            "mean": 24.23,
+            "t": 3.242,
+            "total": 149815.0,
+            "win_rate": 57.8
+          },
+          "oos_unfiltered": {
+            "n": 5057,
+            "mean": -1.57,
+            "t": -0.117,
+            "total": -7930.0,
+            "win_rate": 64.1
+          },
+          "oos_macro": {
+            "n": 4967,
+            "mean": -6.27,
+            "t": -0.47,
+            "total": -31150.0,
+            "win_rate": 63.9
+          }
+        },
+        {
+          "slot_id": 906,
+          "day": "Fri",
+          "bucket": "12:00",
+          "is_unfiltered": {
+            "n": 2354,
+            "mean": 57.6,
+            "t": 3.473,
+            "total": 135600.0,
+            "win_rate": 62.6
+          },
+          "is_macro": {
+            "n": 2354,
+            "mean": 57.6,
+            "t": 3.473,
+            "total": 135600.0,
+            "win_rate": 62.6
+          },
+          "oos_unfiltered": {
+            "n": 1851,
+            "mean": -36.71,
+            "t": -2.888,
+            "total": -67945.0,
+            "win_rate": 63.4
+          },
+          "oos_macro": {
+            "n": 1851,
+            "mean": -36.71,
+            "t": -2.888,
+            "total": -67945.0,
+            "win_rate": 63.4
+          }
+        }
+      ]
+    },
+    "ES": {
+      "summary": {
+        "is_unfiltered": {
+          "n": 39830,
+          "mean": 53.1,
+          "t": 12.191,
+          "total": 2115100.0,
+          "win_rate": 45.9
+        },
+        "is_macro": {
+          "n": 33132,
+          "mean": 19.31,
+          "t": 5.565,
+          "total": 639825.0,
+          "win_rate": 45.7
+        },
+        "oos_unfiltered": {
+          "n": 28750,
+          "mean": -26.18,
+          "t": -13.523,
+          "total": -752550.0,
+          "win_rate": 41.6
+        },
+        "oos_macro": {
+          "n": 23033,
+          "mean": -31.71,
+          "t": -15.225,
+          "total": -730287.5,
+          "win_rate": 40.2
+        }
+      },
+      "candidate_slots": [
+        {
+          "slot_id": 259,
+          "day": "Mon",
+          "bucket": "12:00",
+          "is_unfiltered": {
+            "n": 8356,
+            "mean": 48.49,
+            "t": 6.919,
+            "total": 405175.0,
+            "win_rate": 46.3
+          },
+          "is_macro": {
+            "n": 8356,
+            "mean": 48.49,
+            "t": 6.919,
+            "total": 405175.0,
+            "win_rate": 46.3
+          },
+          "oos_unfiltered": {
+            "n": 6141,
+            "mean": -26.95,
+            "t": -7.062,
+            "total": -165475.0,
+            "win_rate": 40.4
+          },
+          "oos_macro": {
+            "n": 6141,
+            "mean": -26.95,
+            "t": -7.062,
+            "total": -165475.0,
+            "win_rate": 40.4
+          }
+        },
+        {
+          "slot_id": 260,
+          "day": "Mon",
+          "bucket": "12:30",
+          "is_unfiltered": {
+            "n": 8170,
+            "mean": 48.85,
+            "t": 7.347,
+            "total": 399112.5,
+            "win_rate": 47.3
+          },
+          "is_macro": {
+            "n": 8170,
+            "mean": 48.85,
+            "t": 7.347,
+            "total": 399112.5,
+            "win_rate": 47.3
+          },
+          "oos_unfiltered": {
+            "n": 5867,
+            "mean": -41.58,
+            "t": -10.694,
+            "total": -243937.5,
+            "win_rate": 38.6
+          },
+          "oos_macro": {
+            "n": 5867,
+            "mean": -41.58,
+            "t": -10.694,
+            "total": -243937.5,
+            "win_rate": 38.6
+          }
+        },
+        {
+          "slot_id": 282,
+          "day": "Tue",
+          "bucket": "00:00",
+          "is_unfiltered": {
+            "n": 691,
+            "mean": 66.71,
+            "t": 4.487,
+            "total": 46100.0,
+            "win_rate": 54.6
+          },
+          "is_macro": {
+            "n": 691,
+            "mean": 66.71,
+            "t": 4.487,
+            "total": 46100.0,
+            "win_rate": 54.6
+          },
+          "oos_unfiltered": {
+            "n": 572,
+            "mean": -14.64,
+            "t": -0.912,
+            "total": -8375.0,
+            "win_rate": 44.9
+          },
+          "oos_macro": {
+            "n": 572,
+            "mean": -14.64,
+            "t": -0.912,
+            "total": -8375.0,
+            "win_rate": 44.9
+          }
+        },
+        {
+          "slot_id": 357,
+          "day": "Wed",
+          "bucket": "14:00",
+          "is_unfiltered": {
+            "n": 11588,
+            "mean": 48.66,
+            "t": 5.885,
+            "total": 563850.0,
+            "win_rate": 45.1
+          },
+          "is_macro": {
+            "n": 8538,
+            "mean": -14.14,
+            "t": -2.017,
+            "total": -120712.5,
+            "win_rate": 44.3
+          },
+          "oos_unfiltered": {
+            "n": 7395,
+            "mean": -30.14,
+            "t": -7.478,
+            "total": -222900.0,
+            "win_rate": 40.9
+          },
+          "oos_macro": {
+            "n": 5159,
+            "mean": -40.22,
+            "t": -8.488,
+            "total": -207487.5,
+            "win_rate": 38.3
+          }
+        },
+        {
+          "slot_id": 358,
+          "day": "Wed",
+          "bucket": "14:30",
+          "is_unfiltered": {
+            "n": 11025,
+            "mean": 63.57,
+            "t": 5.833,
+            "total": 700862.5,
+            "win_rate": 44.8
+          },
+          "is_macro": {
+            "n": 7377,
+            "mean": -12.18,
+            "t": -1.609,
+            "total": -89850.0,
+            "win_rate": 44.1
+          },
+          "oos_unfiltered": {
+            "n": 8775,
+            "mean": -12.75,
+            "t": -3.449,
+            "total": -111862.5,
+            "win_rate": 44.9
+          },
+          "oos_macro": {
+            "n": 5294,
+            "mean": -19.84,
+            "t": -4.485,
+            "total": -105012.5,
+            "win_rate": 43.4
+          }
+        }
+      ]
+    },
+    "CL": {
+      "summary": {
+        "is_unfiltered": {
+          "n": 1705,
+          "mean": 64.55,
+          "t": 6.534,
+          "total": 110049.99,
+          "win_rate": 63.9
+        },
+        "is_macro": {
+          "n": 1705,
+          "mean": 64.55,
+          "t": 6.534,
+          "total": 110049.99,
+          "win_rate": 63.9
+        },
+        "oos_unfiltered": {
+          "n": 1515,
+          "mean": 21.04,
+          "t": 1.282,
+          "total": 31869.99,
+          "win_rate": 61.7
+        },
+        "oos_macro": {
+          "n": 1515,
+          "mean": 21.04,
+          "t": 1.282,
+          "total": 31869.99,
+          "win_rate": 61.7
+        }
+      },
+      "candidate_slots": [
+        {
+          "slot_id": 180,
+          "day": "Thu",
+          "bucket": "20:00",
+          "is_unfiltered": {
+            "n": 390,
+            "mean": 169.92,
+            "t": 5.134,
+            "total": 66270.0,
+            "win_rate": 64.4
+          },
+          "is_macro": {
+            "n": 390,
+            "mean": 169.92,
+            "t": 5.134,
+            "total": 66270.0,
+            "win_rate": 64.4
+          },
+          "oos_unfiltered": {
+            "n": 204,
+            "mean": -133.33,
+            "t": -4.451,
+            "total": -27200.0,
+            "win_rate": 42.2
+          },
+          "oos_macro": {
+            "n": 204,
+            "mean": -133.33,
+            "t": -4.451,
+            "total": -27200.0,
+            "win_rate": 42.2
+          }
+        },
+        {
+          "slot_id": 223,
+          "day": "Sun",
+          "bucket": "18:00",
+          "is_unfiltered": {
+            "n": 1315,
+            "mean": 33.29,
+            "t": 4.142,
+            "total": 43780.0,
+            "win_rate": 63.8
+          },
+          "is_macro": {
+            "n": 1315,
+            "mean": 33.29,
+            "t": 4.142,
+            "total": 43780.0,
+            "win_rate": 63.8
+          },
+          "oos_unfiltered": {
+            "n": 1311,
+            "mean": 45.06,
+            "t": 2.462,
+            "total": 59069.99,
+            "win_rate": 64.8
+          },
+          "oos_macro": {
+            "n": 1311,
+            "mean": 45.06,
+            "t": 2.462,
+            "total": 59069.99,
+            "win_rate": 64.8
+          }
+        }
+      ]
+    },
+    "FDAX": {
+      "summary": {
+        "is_unfiltered": {
+          "n": 3920,
+          "mean": 268.84,
+          "t": 9.105,
+          "total": 1053850.0,
+          "win_rate": 58.5
+        },
+        "is_macro": {
+          "n": 3852,
+          "mean": 275.45,
+          "t": 9.182,
+          "total": 1061025.0,
+          "win_rate": 58.9
+        },
+        "oos_unfiltered": {
+          "n": 943,
+          "mean": -243.19,
+          "t": -3.487,
+          "total": -229325.0,
+          "win_rate": 53.1
+        },
+        "oos_macro": {
+          "n": 914,
+          "mean": -242.04,
+          "t": -3.371,
+          "total": -221225.0,
+          "win_rate": 53.5
+        }
+      },
+      "candidate_slots": [
+        {
+          "slot_id": 587,
+          "day": "Wed",
+          "bucket": "13:30",
+          "is_unfiltered": {
+            "n": 1157,
+            "mean": 234.77,
+            "t": 3.478,
+            "total": 271625.0,
+            "win_rate": 61.0
+          },
+          "is_macro": {
+            "n": 1089,
+            "mean": 256.01,
+            "t": 3.583,
+            "total": 278800.0,
+            "win_rate": 62.4
+          },
+          "oos_unfiltered": {
+            "n": 248,
+            "mean": -82.16,
+            "t": -0.661,
+            "total": -20375.0,
+            "win_rate": 49.6
+          },
+          "oos_macro": {
+            "n": 219,
+            "mean": -56.05,
+            "t": -0.403,
+            "total": -12275.0,
+            "win_rate": 50.7
+          }
+        },
+        {
+          "slot_id": 648,
+          "day": "Thu",
+          "bucket": "23:00",
+          "is_unfiltered": {
+            "n": 122,
+            "mean": 289.96,
+            "t": 3.425,
+            "total": 35375.0,
+            "win_rate": 68.0
+          },
+          "is_macro": {
+            "n": 122,
+            "mean": 289.96,
+            "t": 3.425,
+            "total": 35375.0,
+            "win_rate": 68.0
+          },
+          "oos_unfiltered": {
+            "n": 43,
+            "mean": -415.7,
+            "t": -2.107,
+            "total": -17875.0,
+            "win_rate": 53.5
+          },
+          "oos_macro": {
+            "n": 43,
+            "mean": -415.7,
+            "t": -2.107,
+            "total": -17875.0,
+            "win_rate": 53.5
+          }
+        },
+        {
+          "slot_id": 675,
+          "day": "Fri",
+          "bucket": "12:30",
+          "is_unfiltered": {
+            "n": 1449,
+            "mean": 234.27,
+            "t": 6.017,
+            "total": 339450.0,
+            "win_rate": 56.9
+          },
+          "is_macro": {
+            "n": 1449,
+            "mean": 234.27,
+            "t": 6.017,
+            "total": 339450.0,
+            "win_rate": 56.9
+          },
+          "oos_unfiltered": {
+            "n": 392,
+            "mean": -422.96,
+            "t": -3.339,
+            "total": -165800.0,
+            "win_rate": 52.3
+          },
+          "oos_macro": {
+            "n": 392,
+            "mean": -422.96,
+            "t": -3.339,
+            "total": -165800.0,
+            "win_rate": 52.3
+          }
+        },
+        {
+          "slot_id": 677,
+          "day": "Fri",
+          "bucket": "13:30",
+          "is_unfiltered": {
+            "n": 1192,
+            "mean": 341.78,
+            "t": 6.435,
+            "total": 407400.0,
+            "win_rate": 57.2
+          },
+          "is_macro": {
+            "n": 1192,
+            "mean": 341.78,
+            "t": 6.435,
+            "total": 407400.0,
+            "win_rate": 57.2
+          },
+          "oos_unfiltered": {
+            "n": 260,
+            "mean": -97.21,
+            "t": -0.881,
+            "total": -25275.0,
+            "win_rate": 57.7
+          },
+          "oos_macro": {
+            "n": 260,
+            "mean": -97.21,
+            "t": -0.881,
+            "total": -25275.0,
+            "win_rate": 57.7
+          }
+        }
+      ]
+    }
+  }
+}
