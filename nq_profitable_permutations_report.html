@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NQ Profitable Permutations & Monte Carlo Audit</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #090d16;
+    --card: #111827;
+    --card-subtle: #1a2234;
+    --border: #1f293d;
+    --text: #f8fafc;
+    --text-muted: #94a3b8;
+    --green: #10b981;
+    --green-glow: rgba(16, 185, 129, 0.15);
+    --green-border: rgba(16, 185, 129, 0.4);
+    --red: #ef4444;
+    --amber: #f59e0b;
+    --cyan: #06b6d4;
+    --purple: #8b5cf6;
+    --blue: #3b82f6;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 32px 24px;
+    line-height: 1.5;
+  }
+  .container { max-width: 1200px; margin: 0 auto; }
+  
+  /* Header */
+  .header {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 20px;
+    margin-bottom: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .header h1 {
+    font-size: 24px;
+    font-weight: 800;
+    background: linear-gradient(135deg, #38bdf8, #818cf8, #c084fc);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .header p {
+    font-size: 13.5px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: 9999px;
+    font-size: 11.5px;
+    font-weight: 600;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .badge-green { background: var(--green-glow); color: var(--green); border: 1px solid var(--green-border); }
+  .badge-purple { background: rgba(139, 92, 246, 0.15); color: var(--purple); border: 1px solid rgba(139, 92, 246, 0.4); }
+
+  /* Hero Champion Card */
+  .hero-card {
+    background: linear-gradient(145deg, #111e38, #0d1527);
+    border: 2px solid #2563eb;
+    border-radius: 14px;
+    padding: 22px 24px;
+    margin-bottom: 28px;
+    position: relative;
+  }
+  .hero-card::after {
+    content: "END-TO-END CHAMPION";
+    position: absolute;
+    top: 16px;
+    right: 20px;
+    background: #1d4ed8;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .hero-title {
+    font-size: 19px;
+    font-weight: 700;
+    color: #93c5fd;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .hero-metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 14px;
+    margin-top: 18px;
+  }
+  .kpi-box {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+  }
+  .kpi-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: 600; }
+  .kpi-value { font-size: 20px; font-weight: 800; margin-top: 4px; font-family: 'JetBrains Mono', monospace; }
+  .kpi-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+  
+  /* Tables */
+  .section-title {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 12px;
+  }
+  .table-wrap {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 28px;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    text-align: left;
+  }
+  th {
+    background: var(--card-subtle);
+    padding: 10px 14px;
+    font-size: 11px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
+  }
+  td {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border);
+    font-family: 'JetBrains Mono', monospace;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover { background: rgba(255, 255, 255, 0.02); }
+
+  .pos { color: var(--green); font-weight: 700; }
+  .neg { color: var(--red); font-weight: 700; }
+  .neutral { color: var(--text-muted); }
+  .highlight-row { background: rgba(16, 185, 129, 0.04); }
+
+  /* Callout */
+  .callout {
+    background: #0f172a;
+    border-left: 4px solid var(--cyan);
+    border-radius: 6px;
+    padding: 16px 18px;
+    font-size: 13px;
+    color: #cbd5e1;
+    line-height: 1.6;
+  }
+  .callout strong { color: #f8fafc; }
+  .callout ul { margin-left: 18px; margin-top: 6px; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Header -->
+  <div class="header">
+    <div>
+      <h1>NQ Permutations: End-to-End & Monte Carlo Audit</h1>
+      <p>In-Sample (Jan 2024 – Jun 2025) vs. Out-of-Sample Holdout (Jul 2025 – Jul 2026)</p>
+    </div>
+    <div style="display: flex; gap: 8px;">
+      <span class="badge badge-green">Pure Standalone Models</span>
+      <span class="badge badge-purple">1,000 M.C. Draws</span>
+    </div>
+  </div>
+
+  <!-- Hero Champion: TM_6 -->
+  <div class="hero-card">
+    <div class="hero-title">
+      <span>🏆 Model: <strong>TM_6</strong></span>
+      <span class="badge badge-green">99.9% Positive MC Slope</span>
+    </div>
+    <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">
+      The <strong>only NQ permutation</strong> that delivered positive net expectancy across both In-Sample and Out-of-Sample holdout periods without any slot filtering.
+    </p>
+
+    <div class="hero-metrics">
+      <div class="kpi-box">
+        <div class="kpi-label">Full Period Net PnL</div>
+        <div class="kpi-value pos">+$188,690.00</div>
+        <div class="kpi-sub">4,568 Total Trades</div>
+      </div>
+      <div class="kpi-box">
+        <div class="kpi-label">In-Sample PnL</div>
+        <div class="kpi-value pos">+$186,830.00</div>
+        <div class="kpi-sub">4,339 Trades | +$43.06/trade</div>
+      </div>
+      <div class="kpi-box">
+        <div class="kpi-label">OOS Holdout PnL</div>
+        <div class="kpi-value pos">+$1,860.00</div>
+        <div class="kpi-sub">229 Trades | 69.0% Win Rate</div>
+      </div>
+      <div class="kpi-box">
+        <div class="kpi-label">Monte Carlo Full 95% CI</div>
+        <div class="kpi-value pos">[+$15.70, +$68.02]</div>
+        <div class="kpi-sub">P(Negative Slope) = 0.1%</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Table 1: End-to-End & OOS Winners -->
+  <div class="section-title">💎 Positive Performers (End-to-End & OOS Turnarounds)</div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Account</th>
+          <th>Status Category</th>
+          <th>In-Sample PnL</th>
+          <th>OOS Holdout PnL</th>
+          <th>Full Period PnL</th>
+          <th>OOS Win Rate</th>
+          <th>OOS MC Mean</th>
+          <th>M.C. 95% Confidence Interval</th>
+          <th>P(Neg Slope)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="highlight-row">
+          <td><strong style="color:#60a5fa">TM_6</strong></td>
+          <td><span class="badge badge-green">End-to-End Champion</span></td>
+          <td class="pos">+$186,830</td>
+          <td class="pos">+$1,860</td>
+          <td class="pos">+$188,690</td>
+          <td>69.0%</td>
+          <td class="pos">+$8.97</td>
+          <td>[-$106.66, +$121.90]</td>
+          <td><strong>0.1% (Full)</strong> / 42.9% (OOS)</td>
+        </tr>
+        <tr>
+          <td><strong>TS_3</strong></td>
+          <td><span class="badge badge-purple">OOS Turnaround</span></td>
+          <td class="neg">-$53,735</td>
+          <td class="pos">+$21,345</td>
+          <td class="neg">-$32,390</td>
+          <td>65.5%</td>
+          <td class="pos">+$3.22</td>
+          <td>[-$22.93, +$28.90]</td>
+          <td>41.1% (OOS)</td>
+        </tr>
+        <tr>
+          <td><strong>TS_7</strong></td>
+          <td><span class="badge badge-purple">OOS Turnaround</span></td>
+          <td class="neg">-$21,530</td>
+          <td class="pos">+$15,080</td>
+          <td class="neg">-$6,450</td>
+          <td>65.3%</td>
+          <td class="pos">+$17.25</td>
+          <td>[-$40.59, +$77.25]</td>
+          <td><strong>27.2% (OOS)</strong></td>
+        </tr>
+        <tr>
+          <td><strong>IPSPB1</strong></td>
+          <td><span class="badge badge-purple">OOS Turnaround</span></td>
+          <td class="neg">-$5,055</td>
+          <td class="pos">+$2,510</td>
+          <td class="neg">-$2,545</td>
+          <td>62.8%</td>
+          <td class="pos">+$5.94</td>
+          <td>[-$107.58, +$127.79]</td>
+          <td>45.9% (OOS)</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Table 2: What Happened to Former High In-Sample Winners? -->
+  <div class="section-title">⚠️ In-Sample Winners That Failed OOS or Discontinued</div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Account</th>
+          <th>What Happened?</th>
+          <th>In-Sample PnL</th>
+          <th>OOS Holdout PnL</th>
+          <th>Full Period PnL</th>
+          <th>Verdict</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>TM_D-R-1_2</strong></td>
+          <td>Flipped sharply negative in OOS</td>
+          <td class="pos">+$174,950</td>
+          <td class="neg">-$112,330</td>
+          <td class="pos">+$62,620</td>
+          <td class="neg">Severe Sign Inversion</td>
+        </tr>
+        <tr>
+          <td><strong>TM_10</strong></td>
+          <td>In-sample gains eroded by OOS regime</td>
+          <td class="pos">+$191,100</td>
+          <td class="neg">-$27,310</td>
+          <td class="pos">+$163,790</td>
+          <td class="neg">Decaying Edge</td>
+        </tr>
+        <tr>
+          <td><strong>IPS_TM_6</strong></td>
+          <td>OOS losses reduced overall gain</td>
+          <td class="pos">+$202,400</td>
+          <td class="neg">-$13,685</td>
+          <td class="pos">+$188,715</td>
+          <td class="neg">Decaying Edge</td>
+        </tr>
+        <tr>
+          <td><strong>TM_7</strong></td>
+          <td>Discontinued (0 trades in OOS)</td>
+          <td class="pos">+$790,085</td>
+          <td class="neutral">$0 (No Trades)</td>
+          <td class="pos">+$790,085</td>
+          <td class="neutral">Not Run in OOS</td>
+        </tr>
+        <tr>
+          <td><strong>TS_2</strong></td>
+          <td>Discontinued (0 trades in OOS)</td>
+          <td class="pos">+$508,015</td>
+          <td class="neutral">$0 (No Trades)</td>
+          <td class="pos">+$508,015</td>
+          <td class="neutral">Not Run in OOS</td>
+        </tr>
+        <tr>
+          <td><strong>V500_sim10</strong></td>
+          <td>Discontinued (0 trades in OOS)</td>
+          <td class="pos">+$453,735</td>
+          <td class="neutral">$0 (No Trades)</td>
+          <td class="pos">+$453,735</td>
+          <td class="neutral">Not Run in OOS</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Key Insights Callout -->
+  <div class="callout">
+    <strong>Key Quant Conclusions:</strong>
+    <ul>
+      <li><strong>TM_6 is the sole structural anchor:</strong> Across 4,568 trades, it maintained positive expectancy in both regimes (+43/trade IS, +8/trade OOS), yielding a <strong>99.9% positive full Monte Carlo slope</strong>.</li>
+      <li><strong>TS_7 and TS_3 are the regime-shift beneficiaries:</strong> They captured positive edge in 2025–2026 (+15k and +21k) with positive MC bootstrap means (+17.25/trade and +3.22/trade).</li>
+      <li><strong>Why calendar slot filtering hurt:</strong> Chopping these accounts into 144 independent hourly bins diluted their statistical depth and forced executions during low-liquidity chop, while trading the core account models standalone produced superior results.</li>
+    </ul>
+  </div>
+
+</div>
+</body>
+</html>
